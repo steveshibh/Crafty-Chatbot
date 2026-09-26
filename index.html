@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crafty (匠心小助手) - Artisan Concierge Demo</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Artisan Palette Design Tokens */
+    :root {
+      --craft-bg: #f5f2ed;           /* warm off-white/beige */
+      --craft-text: #4a4238;         /* dark muted brown */
+      --craft-text-muted: #736859;   /* warm medium muted brown */
+      --craft-card-bg: #fdfbf7;      /* warm porcelain parchment */
+      --craft-card-inner: #f6f2ea;   /* raw earthenware subtle card */
+      --craft-sidebar-bg: #ede6da;   /* warm sand craft sidebar */
+      --craft-border: #ded5c4;       /* soft clay border */
+      --craft-border-strong: #c2b59f;/* prominent handcraft border */
+      --craft-terracotta: #a65427;   /* artisan terracotta clay */
+      --craft-terracotta-hover: #8f441b;
+      --craft-terracotta-soft: rgba(166, 84, 39, 0.12);
+    }
+
+    body {
+      background-color: var(--craft-bg) !important;
+      color: var(--craft-text) !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    /* Custom tactile scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cfc5b3;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b5a995;
+    }
+
+    /* Handcrafted tactile paper grain */
+    .craft-grain {
+      background-color: var(--craft-bg);
+      background-image: radial-gradient(rgba(140, 95, 55, 0.075) 1px, transparent 0);
+      background-size: 16px 16px;
+    }
+  </style>
+</head>
+<body class="antialiased p-2 sm:p-6 min-h-screen flex items-center justify-center">
+
+  <!-- Main Chatbot Container -->
+  <div class="w-full max-w-4xl bg-[#fdfbf7] border border-[#ded5c4] rounded-2xl shadow-[0_16px_40px_rgba(74,66,56,0.08)] overflow-hidden flex flex-col h-[820px]">
+    
+    <!-- Top Bar: Identity & Controls -->
+    <header class="px-4 sm:px-6 py-4 bg-[#fdfbf7] border-b border-[#ded5c4] flex items-center justify-between">
+      <div class="flex items-center space-x-3.5">
+        <div class="relative">
+          <div class="w-11 h-11 rounded-full bg-[#a65427]/15 border border-[#a65427]/30 flex items-center justify-center text-xl shadow-inner text-[#a65427]">
+            🏺
+          </div>
+          <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-600 border-2 border-[#fdfbf7] rounded-full"></span>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 id="appTitle" class="font-semibold text-base sm:text-lg tracking-tight text-[#4a4238]">Crafty · 匠心小助手</h1>
+            <span id="appBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-[#a65427]/10 text-[#a65427] font-medium border border-[#a65427]/25">
+              Artisan Concierge
+            </span>
+          </div>
+          <p id="appSubtitle" class="text-xs text-[#736859]">每一件手作，都有温度与故事 · Every piece has a heartbeat</p>
+        </div>
+      </div>
+
+      <!-- Quick Switchers -->
+      <div class="flex items-center space-x-2">
+        <button id="langToggleBtn" onclick="toggleLanguage()" class="text-xs px-3 py-1.5 rounded-lg border border-[#a65427]/30 bg-[#a65427]/10 text-[#a65427] hover:bg-[#a65427]/20 transition flex items-center space-x-1.5 font-medium shadow-xs">
+          <span>🌐</span>
+          <span id="langLabel">Language: 中文 (Switch to EN)</span>
+        </button>
+        <button onclick="resetConversation()" id="resetBtn" title="Restart Session" class="text-xs px-2.5 py-1.5 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#736859] transition">
+          🔄 重置
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Split into Scenarios & Chat View -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- Left Sidebar: Preset Scenarios (Desktop) -->
+      <aside class="hidden md:flex flex-col w-64 border-r border-[#ded5c4] bg-[#ede6da]/70 p-4 space-y-4">
+        <div>
+          <span id="scenarioHeading" class="text-xs font-semibold text-[#736859] uppercase tracking-wider">
+            体验交互场景 (Demo Scenarios)
+          </span>
+        </div>
+        <div class="space-y-2 flex-1" id="scenarioButtons">
+          <!-- Button 1: Gift -->
+          <button onclick="triggerScenario('gift')" class="w-full text-left p-2.5 rounded-xl border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/50 hover:bg-[#faf6ee] hover:shadow-xs transition group">
+            <div class="flex items-center space-x-2 text-sm font-medium text-[#4a4238] group-hover:text-[#a65427]">
+              <span>🎁</span>
+              <span class="sc-title">挑选走心新婚礼物</span>
+            </div>
+            <p class="sc-desc text-xs text-[#736859] mt-1 line-clamp-1">新婚对杯、刻字礼盒与工期确认</p>
+          </button>
+
+          <!-- Button 2: Bespoke -->
+          <button onclick="triggerScenario('bespoke')" class="w-full text-left p-2.5 rounded-xl border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/50 hover:bg-[#faf6ee] hover:shadow-xs transition group">
+            <div class="flex items-center space-x-2 text-sm font-medium text-[#4a4238] group-hover:text-[#a65427]">
+              <span>✂️</span>
+              <span class="sc-title">定制手工皮具 (Bespoke)</span>
+            </div>
+            <p class="sc-desc text-xs text-[#736859] mt-1 line-clamp-1">选皮料、缝线与烫金字母定制</p>
+          </button>
+
+          <!-- Button 3: Timeline -->
+          <button onclick="triggerScenario('timeline')" class="w-full text-left p-2.5 rounded-xl border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/50 hover:bg-[#faf6ee] hover:shadow-xs transition group">
+            <div class="flex items-center space-x-2 text-sm font-medium text-[#4a4238] group-hover:text-[#a65427]">
+              <span>🪵</span>
+              <span class="sc-title">手作订单进度追踪</span>
+            </div>
+            <p class="sc-desc text-xs text-[#736859] mt-1 line-clamp-1">开料、木旋成型、天然木蜡油封固</p>
+          </button>
+
+          <!-- Button 4: Story -->
+          <button onclick="triggerScenario('story')" class="w-full text-left p-2.5 rounded-xl border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/50 hover:bg-[#faf6ee] hover:shadow-xs transition group">
+            <div class="flex items-center space-x-2 text-sm font-medium text-[#4a4238] group-hover:text-[#a65427]">
+              <span>🏺</span>
+              <span class="sc-title">探寻手作背后的故事</span>
+            </div>
+            <p class="sc-desc text-xs text-[#736859] mt-1 line-clamp-1">为什么柴烧陶器的釉色每一只都不同？</p>
+          </button>
+        </div>
+
+        <!-- Artisan Care Note -->
+        <div class="p-3 bg-[#a65427]/10 rounded-xl border border-[#a65427]/20 text-xs text-[#4a4238]">
+          <div class="font-medium flex items-center space-x-1.5 text-[#a65427]">
+            <span>✨</span>
+            <span id="artisanCareTitle">匠人守则 (Artisan Care)</span>
+          </div>
+          <p id="artisanCareDesc" class="mt-1 text-[#736859] leading-relaxed">
+            Crafty 会耐心解答材质与保养，并自动汇总定制需求提交给匠人工作室，绝不胡乱承诺不合理的急件工期。
+          </p>
+        </div>
+      </aside>
+
+      <!-- Right Area: Chat History & Input Area -->
+      <section class="flex-1 flex flex-col craft-grain">
+        
+        <!-- Messages Scroll Container -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <!-- Rendered dynamically by JS -->
+        </div>
+
+        <!-- Chat Input Bar -->
+        <footer class="p-3 sm:p-4 bg-[#fdfbf7] border-t border-[#ded5c4]">
+          <form id="chatForm" onsubmit="handleUserSubmit(event)" class="flex items-center space-x-2">
+            <div class="relative flex-1">
+              <input 
+                id="userInput" 
+                type="text" 
+                placeholder="咨询手作好物、材质故事、定制需求或输入工期疑问..." 
+                class="w-full bg-[#ffffff] text-[#4a4238] placeholder-[#9c9285] text-sm px-4 py-2.5 rounded-xl border border-[#ded5c4] focus:outline-none focus:border-[#a65427] transition shadow-2xs"
+              />
+            </div>
+            <button 
+              type="submit" 
+              id="sendBtn"
+              class="px-4 py-2.5 bg-[#a65427] hover:bg-[#8f441b] text-white rounded-xl text-sm font-medium transition flex items-center space-x-1 shadow-xs shrink-0"
+            >
+              <span id="sendBtnText">发送</span>
+              <span>➔</span>
+            </button>
+          </form>
+          <div class="flex items-center justify-between mt-2 px-1 text-[11px] text-[#736859]">
+            <span id="footerTip">💡 提示：输入“柴烧”、“定制”、“排单”、“保养”可探索专属功能</span>
+            <span id="footerBrand">Crafty v1.2 · 赋能独立手艺人</span>
+          </div>
+        </footer>
+
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Interactive Script with Complete Bilingual Support & Palette Integration -->
+  <script>
+    let currentLang = 'zh'; // 'zh' or 'en'
+
+    const i18n = {
+      zh: {
+        appTitle: "Crafty · 匠心小助手",
+        appBadge: "Artisan Concierge",
+        appSubtitle: "每一件手作，都有温度与故事 · Every piece has a heartbeat",
+        langToggle: "语言: 中文 (Switch to EN)",
+        resetBtn: "🔄 重置",
+        scenarioHeading: "体验交互场景 (Demo Scenarios)",
+        scenarios: [
+          { title: "挑选走心新婚礼物", desc: "新婚对杯、刻字礼盒与工期确认" },
+          { title: "定制手工皮具 (Bespoke)", desc: "选皮料、缝线与烫金字母定制" },
+          { title: "手作订单进度追踪", desc: "开料、木旋成型、天然木蜡油封固" },
+          { title: "探寻手作背后的故事", desc: "为什么柴烧陶器的釉色每一只都不同？" }
+        ],
+        artisanCareTitle: "匠人守则 (Artisan Care)",
+        artisanCareDesc: "Crafty 会耐心解答材质与保养，并自动汇总定制需求提交给匠人工作室，绝不胡乱承诺不合理的急件工期。",
+        inputPlaceholder: "咨询手作好物、材质故事、定制需求或输入工期疑问...",
+        sendBtnText: "发送",
+        footerTip: "💡 提示：输入“柴烧”、“定制”、“排单”、“保养”可探索专属功能",
+        footerBrand: "Crafty v1.2 · 赋能独立手艺人",
+        welcomeTitle: "您好呀！我是您的手作顾问 <strong class='text-[#a65427] font-semibold'>Crafty（匠心小助手）</strong> 🌿",
+        welcomeBody: "在这个工业快节奏的时代，很高兴与您相遇在慢工细活的手作世界。无论是寻觅独一无二的心意礼物、定制一件专属刻字皮具，还是了解陶泥与木头的养护，我都在这里随时为您协助。",
+        chipsBadges: ["🍃 纯手工制作", "✍️ 独家个性定制", "⏳ 制作排单透明"],
+        quickChips: [
+          { text: "我想找一份 500 元以内的走心新婚手作礼物", label: "🎁 寻找新婚心意好礼" },
+          { text: "我想给手工真皮手账本定制烫金名字", label: "✂️ 手账本个性化定制" },
+          { text: "查询我的手作订单 #CF-8921 制作进度", label: "📦 查询我的订单排期" }
+        ],
+        langSwitchedNotice: "🌐 已切换至中文模式。接下来 Crafty 将以中文为您介绍手作与定制服务！"
+      },
+      en: {
+        appTitle: "Crafty · Artisan Concierge",
+        appBadge: "Handmade Concierge",
+        appSubtitle: "Every piece has a heartbeat and an artisan's story.",
+        langToggle: "Language: English (切换为中文)",
+        resetBtn: "🔄 Reset",
+        scenarioHeading: "Demo Scenarios",
+        scenarios: [
+          { title: "Meaningful Wedding Gift", desc: "Hand-thrown pair mugs, monogramming & lead time" },
+          { title: "Bespoke Leather Journal", desc: "Leather selection, stitching & gold foil stamping" },
+          { title: "Craft Order Timeline Tracking", desc: "Wood selection, lathe shaping & natural wax finishing" },
+          { title: "Behind the Craft Story", desc: "Why wood-fired pottery glazes are never identical" }
+        ],
+        artisanCareTitle: "Artisan Code of Care",
+        artisanCareDesc: "Crafty answers material & care questions, structures custom requests for makers, and never makes unrealistic rush delivery promises.",
+        inputPlaceholder: "Ask about handmade gifts, bespoke crafting, lead times, or care...",
+        sendBtnText: "Send",
+        footerTip: "💡 Tip: Try \"wood-fired\", \"custom\", \"tracking\", or \"care\" to explore",
+        footerBrand: "Crafty v1.2 · Empowering Independent Makers",
+        welcomeTitle: "Hello there! I'm your artisan concierge, <strong class='text-[#a65427] font-semibold'>Crafty</strong> 🌿",
+        welcomeBody: "In a fast-paced, mass-produced world, welcome to the deliberate warmth of handcrafted goods. Whether you're looking for an unforgettable one-of-a-kind gift, commissioning bespoke leatherwork, or curious about how to care for wood and clay, I'm here to guide you.",
+        chipsBadges: ["🍃 100% Handcrafted", "✍️ Bespoke Monograms", "⏳ Transparent Studio Queue"],
+        quickChips: [
+          { text: "I'm looking for a meaningful wedding gift under $80 with custom initials", label: "🎁 Find a Meaningful Gift" },
+          { text: "I'd like to customize a bespoke leather journal with embossed initials", label: "✂️ Bespoke Leather Customizer" },
+          { text: "Track progress for my handmade order #CF-8921", label: "📦 Track Order #CF-8921" }
+        ],
+        langSwitchedNotice: "🌐 Switched to English mode. Crafty will now converse with you in English!"
+      }
+    };
+
+    function updateStaticUI() {
+      const t = i18n[currentLang];
+      document.getElementById('appTitle').innerText = t.appTitle;
+      document.getElementById('appBadge').innerText = t.appBadge;
+      document.getElementById('appSubtitle').innerText = t.appSubtitle;
+      document.getElementById('langLabel').innerText = t.langToggle;
+      document.getElementById('resetBtn').innerText = t.resetBtn;
+      document.getElementById('scenarioHeading').innerText = t.scenarioHeading;
+      document.getElementById('artisanCareTitle').innerText = t.artisanCareTitle;
+      document.getElementById('artisanCareDesc').innerText = t.artisanCareDesc;
+      document.getElementById('userInput').placeholder = t.inputPlaceholder;
+      document.getElementById('sendBtnText').innerText = t.sendBtnText;
+      document.getElementById('footerTip').innerText = t.footerTip;
+      document.getElementById('footerBrand').innerText = t.footerBrand;
+
+      // Update sidebar scenario buttons
+      const titles = document.querySelectorAll('.sc-title');
+      const descs = document.querySelectorAll('.sc-desc');
+      t.scenarios.forEach((sc, idx) => {
+        if (titles[idx]) titles[idx].innerText = sc.title;
+        if (descs[idx]) descs[idx].innerText = sc.desc;
+      });
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      updateStaticUI();
+      const t = i18n[currentLang];
+      appendSystemNotice(t.langSwitchedNotice);
+    }
+
+    function appendSystemNotice(noticeText) {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'flex justify-center my-2';
+      div.innerHTML = `
+        <div class="px-3.5 py-1 rounded-full bg-[#a65427]/10 border border-[#a65427]/25 text-xs text-[#a65427] flex items-center space-x-1.5 shadow-2xs font-medium">
+          <span>${noticeText}</span>
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendMessage(sender, htmlContent) {
+      const container = document.getElementById('chatMessages');
+      const msgWrapper = document.createElement('div');
+      msgWrapper.className = sender === 'user' ? 'flex justify-end' : 'flex items-start space-x-3';
+
+      if (sender === 'user') {
+        msgWrapper.innerHTML = `
+          <div class="bg-[#a65427] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[80%] text-sm shadow-sm leading-relaxed">
+            ${htmlContent}
+          </div>
+        `;
+      } else {
+        msgWrapper.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-[#a65427]/15 border border-[#a65427]/30 flex items-center justify-center text-sm shrink-0 text-[#a65427]">
+            🏺
+          </div>
+          <div class="space-y-2 max-w-[85%] text-sm">
+            <div class="bg-[#ffffff] border border-[#ded5c4] p-4 rounded-2xl rounded-tl-sm shadow-sm space-y-3 leading-relaxed text-[#4a4238]">
+              ${htmlContent}
+            </div>
+          </div>
+        `;
+      }
+
+      container.appendChild(msgWrapper);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function handleUserSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('userInput');
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = '';
+      appendMessage('user', val);
+
+      setTimeout(() => {
+        respondToQuery(val);
+      }, 500);
+    }
+
+    function sendQuickMessage(text) {
+      appendMessage('user', text);
+      setTimeout(() => {
+        respondToQuery(text);
+      }, 500);
+    }
+
+    function triggerScenario(type) {
+      if (currentLang === 'zh') {
+        if (type === 'gift') sendQuickMessage('我想找一份 500 元左右的新婚走心手作礼物，需要能刻名字');
+        else if (type === 'bespoke') sendQuickMessage('我想了解手工牛皮手账本的定制选项与刻字细节');
+        else if (type === 'timeline') sendQuickMessage('帮我查询订单 #CF-8921 目前的制作进度');
+        else if (type === 'story') sendQuickMessage('为什么柴烧陶器的釉色纹理每一只都不一样？');
+      } else {
+        if (type === 'gift') sendQuickMessage("I'm looking for a meaningful wedding gift under $80 with custom initials engraved");
+        else if (type === 'bespoke') sendQuickMessage("I'd like to customize a bespoke leather journal with monogram details");
+        else if (type === 'timeline') sendQuickMessage("Track current crafting stage for handmade order #CF-8921");
+        else if (type === 'story') sendQuickMessage("Why are wood-fired ceramic glazes never identical?");
+      }
+    }
+
+    function respondToQuery(query) {
+      const q = query.toLowerCase();
+      const isEnglish = currentLang === 'en' || /[a-zA-Z]{4,}/.test(query);
+
+      if (q.includes('新婚') || q.includes('礼') || q.includes('gift') || q.includes('wedding')) {
+        if (isEnglish) {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">💍 For a wedding gift, the most cherished element is unmistakable thoughtfulness! Here are two curated handmade sets from independent studios:</p>
+            
+            <!-- Product Card 1 -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-xs px-2 py-0.5 rounded bg-[#a65427]/10 text-[#a65427] font-medium border border-[#a65427]/20">Ceramic Mastery · Qinglan Studio (Jingdezhen)</span>
+                  <h4 class="font-semibold text-sm text-[#4a4238] mt-1">【Azure Kiln Transmutation】Hand-Thrown Pair Mugs Set</h4>
+                </div>
+                <span class="text-sm font-bold text-[#a65427]">$68 / pair</span>
+              </div>
+              <p class="text-xs text-[#736859] leading-relaxed">
+                Fired in a wood-burning kiln at 1,300°C. Base can be hand-carved with the couple's initials and anniversary date (e.g. <em>J & M · 2026.10</em>). Packaged in a traditional mortise-and-tenon paulownia wood gift box with handwritten calligraphed card.
+              </p>
+              <div class="flex items-center justify-between pt-1 border-t border-[#ded5c4] text-xs text-[#736859]">
+                <span>⏳ Artisan Lead Time: 5-7 business days for carving & finish</span>
+                <button onclick="openBespokeModal('pottery')" class="px-2.5 py-1 bg-[#a65427]/15 hover:bg-[#a65427]/25 text-[#a65427] font-medium rounded-lg transition">
+                  Preview Monogram ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- Product Card 2 -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-700/10 text-emerald-800 font-medium border border-emerald-700/20">Woodwork · Forest Whisper Workshop</span>
+                  <h4 class="font-semibold text-sm text-[#4a4238] mt-1">FAS Black Walnut Breakfast Tray with Dovetail Corners</h4>
+                </div>
+                <span class="text-sm font-bold text-[#a65427]">$58</span>
+              </div>
+              <p class="text-xs text-[#736859] leading-relaxed">
+                Hand-planed from single-slab solid North American black walnut, finished with natural organic lacquer. The rim features a warm brass strip laser-etched with personal wedding vows.
+              </p>
+              <div class="flex items-center justify-between pt-1 border-t border-[#ded5c4] text-xs text-[#736859]">
+                <span>⏳ Artisan Lead Time: In stock, personalized & dispatched within 48h</span>
+                <button class="px-2.5 py-1 border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#4a4238] rounded-lg transition">
+                  View Details
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              Would you lean towards tactile ceramic cups they'll hold every morning, or an heirloom walnut tray that anchors daily life?
+            </p>
+          `);
+        } else {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">💍 挑选新婚礼物，最珍贵的是那份独一无二的祝愿！为您推荐两款景德镇与苏州独立手作人的精选：</p>
+            
+            <!-- Product Card 1 -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-xs px-2 py-0.5 rounded bg-[#a65427]/10 text-[#a65427] font-medium border border-[#a65427]/20">陶艺精作 · 景德镇青岚陶坊</span>
+                  <h4 class="font-semibold text-sm text-[#4a4238] mt-1">【天青双色窑变】手工拉坯对杯礼盒</h4>
+                </div>
+                <span class="text-sm font-bold text-[#a65427]">¥468 / 套</span>
+              </div>
+              <p class="text-xs text-[#736859] leading-relaxed">
+                1,300℃ 高温柴窑淬炼，杯底支持手工刻录新人首字母缩写与纪念日（如: J & M · 2026）。附带手工榫卯梧桐木盒与手写烫金祝福笺。
+              </p>
+              <div class="flex items-center justify-between pt-1 border-t border-[#ded5c4] text-xs text-[#736859]">
+                <span>⏳ 匠人排期：手刻烧制需 5 个工作日</span>
+                <button onclick="openBespokeModal('pottery')" class="px-2.5 py-1 bg-[#a65427]/15 hover:bg-[#a65427]/25 text-[#a65427] font-medium rounded-lg transition">
+                  预览定制效果 ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- Product Card 2 -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-700/10 text-emerald-800 font-medium border border-emerald-700/20">木艺匠心 · 原木物语工作室</span>
+                  <h4 class="font-semibold text-sm text-[#4a4238] mt-1">北美黑胡桃双人燕尾榫晨光托盘</h4>
+                </div>
+                <span class="text-sm font-bold text-[#a65427]">¥388</span>
+              </div>
+              <p class="text-xs text-[#736859] leading-relaxed">
+                整块FAS级黑胡桃木手工刨制，天然生漆擦色，四角为传统榫卯结构。托盘边缘可内嵌黄铜激光蚀刻新人誓言。
+              </p>
+              <div class="flex items-center justify-between pt-1 border-t border-[#ded5c4] text-xs text-[#736859]">
+                <span>⏳ 匠人排期：现货雕刻 48小时内顺丰发出</span>
+                <button class="px-2.5 py-1 border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#4a4238] rounded-lg transition">
+                  查看详情
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              您希望新人礼物更偏向日常每天都能使用的温润对杯，还是能陪伴生活岁月的木质托盘？
+            </p>
+          `);
+        }
+      } else if (q.includes('皮具') || q.includes('手账') || q.includes('定制') || q.includes('bespoke') || q.includes('leather') || q.includes('journal')) {
+        if (isEnglish) {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">✂️ Customizing a bespoke leather journal allows you to choose artisanal details just like standing by the maker's workbench:</p>
+            
+            <!-- Interactive Customizer Widget (EN) -->
+            <div class="border border-[#a65427]/30 bg-[#f6f2ea] rounded-xl p-4 space-y-3.5 shadow-xs">
+              <div class="flex items-center justify-between border-b border-[#ded5c4] pb-2">
+                <span class="font-medium text-xs text-[#4a4238] flex items-center space-x-1.5">
+                  <span>🏷️</span>
+                  <span>Bespoke Leather Journal Configurator</span>
+                </span>
+                <span class="text-xs text-[#a65427] font-medium">Artisan: Arson Leather Studio</span>
+              </div>
+
+              <!-- Material Option -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">1. Select Leather (Italian Tuscan Veg-Tanned Cowhide):</label>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                  <button class="p-2 rounded-lg border-2 border-[#a65427] bg-[#a65427]/10 font-medium text-[#a65427]">
+                    Caramel Tan (Rich Patina)
+                  </button>
+                  <button class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-[#4a4238]">
+                    Natural Nude (Honey aging)
+                  </button>
+                  <button class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-[#4a4238]">
+                    Olive Green (Vintage Matte)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Monogram Option -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">2. Hot Foil Stamping / Deboss (Up to 8 characters):</label>
+                <div class="flex space-x-2">
+                  <input type="text" id="customInputEN" value="STEVE M." class="bg-[#ffffff] border border-[#ded5c4] rounded-lg px-3 py-1.5 text-xs text-[#4a4238] flex-1 uppercase tracking-widest font-mono">
+                  <select class="bg-[#ffffff] border border-[#ded5c4] rounded-lg px-2 py-1.5 text-xs text-[#4a4238]">
+                    <option>Vintage Gold Foil</option>
+                    <option>Blind Deboss (Subtle)</option>
+                    <option>Silver Leaf</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Thread Color -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">3. German Sajou Hand-Waxed Linen Thread:</label>
+                <div class="flex space-x-3 text-xs">
+                  <label class="flex items-center space-x-1.5 cursor-pointer text-[#4a4238]">
+                    <input type="radio" name="thread_en" checked class="text-[#a65427]">
+                    <span>Off-white Saddle Stitch</span>
+                  </label>
+                  <label class="flex items-center space-x-1.5 cursor-pointer text-[#4a4238]">
+                    <input type="radio" name="thread_en" class="text-[#a65427]">
+                    <span>Tone-on-tone Caramel</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-[#ded5c4] flex items-center justify-between">
+                <div>
+                  <span class="text-xs text-[#736859]">All-inclusive artisan quote:</span>
+                  <span class="text-sm font-bold text-[#a65427]">$48</span>
+                </div>
+                <button onclick="confirmBespokeTicket()" class="px-3 py-1.5 bg-[#a65427] hover:bg-[#8f441b] text-white rounded-lg text-xs font-medium transition shadow-xs">
+                  Generate Artisan Ticket ➔
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              Note: Full-grain vegetable-tanned leather absorbs the natural oils of your hands over time, gradually darkening into a deep, glossy amber patina unique to your journey.
+            </p>
+          `);
+        } else {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">✂️ 定制专属手工手账本，您可以像在匠人工作台旁一样自由挑选工艺细节：</p>
+            
+            <!-- Interactive Customizer Widget (ZH) -->
+            <div class="border border-[#a65427]/30 bg-[#f6f2ea] rounded-xl p-4 space-y-3.5 shadow-xs">
+              <div class="flex items-center justify-between border-b border-[#ded5c4] pb-2">
+                <span class="font-medium text-xs text-[#4a4238] flex items-center space-x-1.5">
+                  <span>🏷️</span>
+                  <span>植鞣皮手账本定制配置器</span>
+                </span>
+                <span class="text-xs text-[#a65427] font-medium">匠人：阿森皮艺</span>
+              </div>
+
+              <!-- Material Option -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">1. 选择皮料 (意大利托斯卡纳植鞣牛皮)：</label>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                  <button class="p-2 rounded-lg border-2 border-[#a65427] bg-[#a65427]/10 font-medium text-[#a65427]">
+                    焦糖棕 (会养成包浆)
+                  </button>
+                  <button class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-[#4a4238]">
+                    原色裸皮 (自然蜜色)
+                  </button>
+                  <button class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-[#4a4238]">
+                    橄榄绿 (复古哑光)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Monogram Option -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">2. 烫金 / 压印首字母 (最多 8 字符)：</label>
+                <div class="flex space-x-2">
+                  <input type="text" value="STEVE M." class="bg-[#ffffff] border border-[#ded5c4] rounded-lg px-3 py-1.5 text-xs text-[#4a4238] flex-1 uppercase tracking-widest font-mono">
+                  <select class="bg-[#ffffff] border border-[#ded5c4] rounded-lg px-2 py-1.5 text-xs text-[#4a4238]">
+                    <option>复古金箔</option>
+                    <option>无色盲压 (素雅)</option>
+                    <option>典雅银箔</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Thread Color -->
+              <div class="space-y-1.5">
+                <label class="text-xs text-[#736859] block">3. 德国爱芬手缝麻线：</label>
+                <div class="flex space-x-3 text-xs">
+                  <label class="flex items-center space-x-1.5 cursor-pointer text-[#4a4238]">
+                    <input type="radio" name="thread_zh" checked class="text-[#a65427]">
+                    <span>米白色法式马鞍针</span>
+                  </label>
+                  <label class="flex items-center space-x-1.5 cursor-pointer text-[#4a4238]">
+                    <input type="radio" name="thread_zh" class="text-[#a65427]">
+                    <span>同色系焦糖暗线</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-[#ded5c4] flex items-center justify-between">
+                <div>
+                  <span class="text-xs text-[#736859]">工时费及定制全包：</span>
+                  <span class="text-sm font-bold text-[#a65427]">¥320</span>
+                </div>
+                <button onclick="confirmBespokeTicket()" class="px-3 py-1.5 bg-[#a65427] hover:bg-[#8f441b] text-white rounded-lg text-xs font-medium transition shadow-xs">
+                  生成匠人定制单 ➔
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              提示：植鞣皮会随您的日常使用吸收皮肤油脂，逐渐变深并绽放如琥珀般的天然包浆。
+            </p>
+          `);
+        }
+      } else if (q.includes('8921') || q.includes('进度') || q.includes('订单') || q.includes('track') || q.includes('order')) {
+        if (isEnglish) {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">📦 Found studio live progress for handmade order <code class="text-xs bg-[#a65427]/10 text-[#a65427] px-1.5 py-0.5 rounded font-mono border border-[#a65427]/20">#CF-8921</code>:</p>
+
+            <!-- Milestone Tracker Card (EN) -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-semibold text-[#4a4238]">FAS Black Walnut Dovetail Keepsake Box</h4>
+                  <p class="text-[11px] text-[#736859]">Master Craftsman: Lin · Suzhou Woodcraft Studio</p>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-700/10 text-blue-800 font-medium border border-blue-700/20">
+                  In Progress · Phase 3 of 4
+                </span>
+              </div>
+
+              <!-- Step by step visual timeline -->
+              <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#ded5c4]">
+                <!-- Step 1 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
+                  <p class="text-xs font-medium text-[#4a4238]">Sep 22 · Raw Timber Selected & Dovetail Cut</p>
+                  <p class="text-[11px] text-[#736859]">Continuous mountain grain selected; dovetail joints hand-chiseled for structural harmony</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
+                  <p class="text-xs font-medium text-[#4a4238]">Sep 24 · Progressive Sanding (600 → 1,500 Grit)</p>
+                  <p class="text-[11px] text-[#736859]">Curved chamfers hand-sanded to a silky, tactile finish</p>
+                </div>
+
+                <!-- Step 3 (Active) -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-[#a65427] animate-pulse text-white text-[10px] flex items-center justify-center">●</span>
+                  <p class="text-xs font-medium text-[#a65427]">Current Phase · German OSMO Organic Hardwax-Oil (2nd Coat Curing)</p>
+                  <p class="text-[11px] text-[#736859]">Slow-drying in a climate-controlled studio to enhance water resistance while letting the wood breathe</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="relative opacity-60">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-stone-300 text-transparent text-[10px]">○</span>
+                  <p class="text-xs font-medium text-[#4a4238]">Est. Sep 28 · Suede Lining Inlay & Wax Seal Boxing</p>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-[#ded5c4] flex items-center justify-between text-xs">
+                <span class="text-[#736859]">Estimated Courier Dispatch: <strong>Sep 29</strong></span>
+                <button class="text-[#a65427] hover:underline font-medium">
+                  View 2 Studio Workbench Photos
+                </button>
+              </div>
+            </div>
+          `);
+        } else {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">📦 为您查询到手作订单 <code class="text-xs bg-[#a65427]/10 text-[#a65427] px-1.5 py-0.5 rounded font-mono border border-[#a65427]/20">#CF-8921</code> 的最新工坊进度：</p>
+
+            <!-- Milestone Tracker Card (ZH) -->
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-semibold text-[#4a4238]">北美黑胡桃手工榫卯首饰盒</h4>
+                  <p class="text-[11px] text-[#736859]">独立匠人：林师傅 · 苏州木作工坊</p>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-700/10 text-blue-800 font-medium border border-blue-700/20">
+                  进行中 · 第 3 阶段
+                </span>
+              </div>
+
+              <!-- Step by step visual timeline -->
+              <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#ded5c4]">
+                <!-- Step 1 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
+                  <p class="text-xs font-medium text-[#4a4238]">9月22日 · 精选木料与激光开榫</p>
+                  <p class="text-[11px] text-[#736859]">已完成北美黑胡桃山形纹选料，完成燕尾榫精密接合</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
+                  <p class="text-xs font-medium text-[#4a4238]">9月24日 · 600目-1500目精细砂光</p>
+                  <p class="text-[11px] text-[#736859]">手工圆弧倒角打磨，触感已如丝绸般温润</p>
+                </div>
+
+                <!-- Step 3 (Active) -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-[#a65427] animate-pulse text-white text-[10px] flex items-center justify-center">●</span>
+                  <p class="text-xs font-medium text-[#a65427]">当前阶段 · 德国OSMO天然植物木蜡油涂装（第二遍阴干）</p>
+                  <p class="text-[11px] text-[#736859]">目前正在恒温工作室自然风干固化，提升木器防水与耐污性</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="relative opacity-60">
+                  <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-stone-300 text-transparent text-[10px]">○</span>
+                  <p class="text-xs font-medium text-[#4a4238]">预计 9月28日 · 丝绒内衬镶嵌与专属礼盒装封</p>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-[#ded5c4] flex items-center justify-between text-xs">
+                <span class="text-[#736859]">预计顺丰发出日期：<strong>9月29日</strong></span>
+                <button class="text-[#a65427] hover:underline font-medium">
+                  查看工坊现场照片 (2)
+                </button>
+              </div>
+            </div>
+          `);
+        }
+      } else if (q.includes('柴烧') || q.includes('故事') || q.includes('为什么') || q.includes('story') || q.includes('kiln') || q.includes('ceramic') || q.includes('pottery')) {
+        if (isEnglish) {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">🏺 That touches on the very soul of craftsmanship — <em>"Entering the kiln with one hue, emerging with ten thousand wonders"</em>:</p>
+            
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2 text-xs leading-relaxed">
+              <h4 class="font-semibold text-sm text-[#a65427]">Why are wood-fired ceramic glazes unrepeatable?</h4>
+              <p class="text-[#736859]">
+                Unlike mass-market factories using electric ovens and standardized spray glazes, an authentic wood-fired kiln is stoked continuously for 3 days and 3 nights, reaching 1,300°C.
+              </p>
+              <ul class="list-disc list-inside space-y-1 text-[#4a4238]">
+                <li><strong>Natural Fly Ash Glaze</strong>: Burning pine ash swirls inside the kiln and settles onto the hot clay, melting into spontaneous amber droplets and crystalline textures.</li>
+                <li><strong>Flame Paths & Thermal Marks</strong>: Dependent on where each cup rests relative to the draft channels, localized oxidation and reduction leave one-of-a-kind fire kisses.</li>
+                <li><strong>A Solitary Signature</strong>: Because no two wood flames dance identically, the cup in your hands has no twin in the entire world.</li>
+              </ul>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              Master Qinglan says: <em>"The craftsman builds half the work; the earth and fire decide the rest."</em>
+            </p>
+          `);
+        } else {
+          appendMessage('bot', `
+            <p class="font-medium text-[#4a4238]">🏺 这正是手作之美最迷人的地方 —— “入窑一色，出窑万彩”：</p>
+            
+            <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2 text-xs leading-relaxed">
+              <h4 class="font-semibold text-sm text-[#a65427]">为什么柴烧陶器的釉色纹理是不可复制的？</h4>
+              <p class="text-[#736859]">
+                与工厂里用电炉喷涂标准色釉不同，手作柴烧通常需要在龙窑中持续投柴燃烧 3 天 3 夜，温度高达 1,300℃。
+              </p>
+              <ul class="list-disc list-inside space-y-1 text-[#4a4238]">
+                <li><strong>落灰成釉</strong>：松木燃烧后激扬的木灰落在坯体上，在极高温度下熔化，形成天然流动的“火刺”与琥珀色釉滴。</li>
+                <li><strong>窑内气流与火痕</strong>：陶器摆放在火膛的不同位置，接受的火焰亲吻角度不同，氧化或还原气氛变化便造就了斑驳独特的肌理。</li>
+                <li><strong>独一无二的生命力</strong>：世界上没有两股完全一样的火风，因此你手中的那一枚杯子，是这世间绝无仅有的孤品。</li>
+              </ul>
+            </div>
+
+            <p class="text-xs text-[#736859]">
+              匠人青岚常说：“人做一半，天做一半”。每一道微妙的窑变，都是陶泥对大自然温度的私密应答。
+            </p>
+          `);
+        }
+      } else {
+        if (isEnglish) {
+          appendMessage('bot', `
+            <p class="text-sm text-[#4a4238]">
+              Understood your interest: "<strong>${escapeHtml(query)}</strong>" 🌿
+            </p>
+            <p class="text-xs text-[#736859] leading-relaxed">
+              Crafty connects you with vetted independent potters, leather crafters, metalsmiths, and traditional woodworkers. Where shall we begin?
+            </p>
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <button onclick="sendQuickMessage('Recommend thoughtful tea or woodwork gifts for parents under $60')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                🍵 Thoughtful Gifts for Elders
+              </button>
+              <button onclick="sendQuickMessage('Care guide to prevent handmade brass jewelry from tarnishing')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                💍 Jewelry Care & Anti-Tarnish
+              </button>
+              <button onclick="sendQuickMessage('I want to submit a design sketch for an artisan quote')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                📐 Submit Sketch for Quote
+              </button>
+              <button onclick="sendQuickMessage('Hand-hammered couple rings with custom engraving')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                ✨ Hand-Forged Couple Rings
+              </button>
+            </div>
+          `);
+        } else {
+          appendMessage('bot', `
+            <p class="text-sm text-[#4a4238]">
+              收到您的想法：“<strong>${escapeHtml(query)}</strong>” 🌿
+            </p>
+            <p class="text-xs text-[#736859] leading-relaxed">
+              Crafty 能为您连接全网优秀的独立陶艺家、皮具匠人、金工首饰师与传统木作工坊。您可以：
+            </p>
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <button onclick="sendQuickMessage('推荐 300 元左右适合送给长辈的手作紫砂或木作')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                🍵 适合长辈的沉稳手作
+              </button>
+              <button onclick="sendQuickMessage('了解黄铜手作首饰的防氧化保养技巧')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                💍 首饰材质与日常保养
+              </button>
+              <button onclick="sendQuickMessage('我想给匠人发一张我的设计手稿求报价')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                📐 手稿定制与匠人询价
+              </button>
+              <button onclick="sendQuickMessage('我想挑选一份七夕/情侣互赠的手作对戒')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+                ✨ 浪漫情侣手工对戒
+              </button>
+            </div>
+          `);
+        }
+      }
+    }
+
+    function confirmBespokeTicket() {
+      if (currentLang === 'en') {
+        appendMessage('bot', `
+          <div class="border border-emerald-600/30 bg-emerald-700/10 rounded-xl p-3.5 space-y-2 text-xs text-emerald-900">
+            <div class="flex items-center space-x-2 font-semibold text-emerald-800">
+              <span>✅</span>
+              <span>Bespoke Order Brief #BP-4402 Generated!</span>
+            </div>
+            <p class="opacity-90 leading-relaxed text-[#4a4238]">
+              Automatically routed to <strong>Arson Leather Studio</strong> workbench:<br>
+              • Material: Italian Tuscan Caramel Tan Veg-Tanned Leather<br>
+              • Monogram: STEVE M. (Vintage Gold Foil)<br>
+              • Stitching: Off-white Sajou linen saddle stitch<br>
+              • Studio Commitment: Crafted within 4 business days with photo confirmation before dispatch
+            </p>
+            <div class="pt-1 flex items-center space-x-2">
+              <button class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-medium transition shadow-xs">
+                Proceed to Secure Checkout ($48)
+              </button>
+              <span class="text-[11px] text-[#736859]">Work-in-progress photo proof included; free adjustments prior to mailing</span>
+            </div>
+          </div>
+        `);
+      } else {
+        appendMessage('bot', `
+          <div class="border border-emerald-600/30 bg-emerald-700/10 rounded-xl p-3.5 space-y-2 text-xs text-emerald-900">
+            <div class="flex items-center space-x-2 font-semibold text-emerald-800">
+              <span>✅</span>
+              <span>已成功生成《手作定制需求单 #BP-4402》！</span>
+            </div>
+            <p class="opacity-90 leading-relaxed text-[#4a4238]">
+              已自动同步至<strong>阿森皮艺工作室</strong>工作台：<br>
+              • 材质：意大利托斯卡纳焦糖棕植鞣牛皮<br>
+              • 压印内容：STEVE M. (复古金箔)<br>
+              • 缝线：米白色爱芬法式麻线马鞍针法<br>
+              • 承诺工期：4 个工作日内完成制作并拍摄成品确认照
+            </p>
+            <div class="pt-1 flex items-center space-x-2">
+              <button class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-medium transition shadow-xs">
+                进入安全结账 (¥320)
+              </button>
+              <span class="text-[11px] text-[#736859]">支持制作中拍照确认，不满意可免费微调</span>
+            </div>
+          </div>
+        `);
+      }
+    }
+
+    function openBespokeModal(type) {
+      if (currentLang === 'en') {
+        sendQuickMessage('I want to preview the hand-carved initials & packaging for the pair mugs');
+      } else {
+        sendQuickMessage('我想预览这款手拉坯对杯的刻字效果与礼盒详情');
+      }
+    }
+
+    function resetConversation() {
+      const t = i18n[currentLang];
+      const container = document.getElementById('chatMessages');
+      
+      const badgePills = t.chipsBadges.map(b => `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#ede6da] text-[#4a4238] border border-[#ded5c4]">
+          ${b}
+        </span>
+      `).join('');
+
+      const actionChips = t.quickChips.map(c => `
+        <button onclick="sendQuickMessage('${c.text}')" class="text-xs px-3 py-1.5 rounded-full border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-[#4a4238] transition shadow-2xs hover:bg-[#ede6da]">
+          ${c.label}
+        </button>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full bg-[#a65427]/15 border border-[#a65427]/30 flex items-center justify-center text-sm shrink-0 text-[#a65427]">
+            🏺
+          </div>
+          <div class="space-y-2 max-w-[85%]">
+            <div class="bg-[#ffffff] border border-[#ded5c4] p-4 rounded-2xl rounded-tl-sm shadow-sm space-y-2.5 text-sm leading-relaxed text-[#4a4238]">
+              <p class="font-medium text-[#4a4238]">
+                ${t.welcomeTitle}
+              </p>
+              <p class="text-[#736859]">
+                ${t.welcomeBody}
+              </p>
+              <div class="pt-1 flex flex-wrap gap-2 text-xs">
+                ${badgePills}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${actionChips}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    // Initialize UI on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateStaticUI();
+      resetConversation();
+    });
+  </script>
+</body>
+</html>
