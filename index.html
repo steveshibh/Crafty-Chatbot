@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crafty (匠心小助手) - Artisan Concierge Demo</title>
+  <title>Crafty (匠心小助手) - Artisan AI Concierge (Gemini Powered)</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
     /* Artisan Palette Design Tokens */
@@ -49,41 +49,52 @@
       background-image: radial-gradient(rgba(140, 95, 55, 0.075) 1px, transparent 0);
       background-size: 16px 16px;
     }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      background-color: rgba(74, 66, 56, 0.45);
+      backdrop-filter: blur(3px);
+    }
   </style>
 </head>
 <body class="antialiased p-2 sm:p-6 min-h-screen flex items-center justify-center">
 
   <!-- Main Chatbot Container -->
-  <div class="w-full max-w-4xl bg-[#fdfbf7] border border-[#ded5c4] rounded-2xl shadow-[0_16px_40px_rgba(74,66,56,0.08)] overflow-hidden flex flex-col h-[820px]">
+  <div class="w-full max-w-4xl bg-[#fdfbf7] border border-[#ded5c4] rounded-2xl shadow-[0_16px_40px_rgba(74,66,56,0.08)] overflow-hidden flex flex-col h-[840px] relative">
     
     <!-- Top Bar: Identity & Controls -->
-    <header class="px-4 sm:px-6 py-4 bg-[#fdfbf7] border-b border-[#ded5c4] flex items-center justify-between">
+    <header class="px-4 sm:px-6 py-3.5 bg-[#fdfbf7] border-b border-[#ded5c4] flex items-center justify-between">
       <div class="flex items-center space-x-3.5">
         <div class="relative">
           <div class="w-11 h-11 rounded-full bg-[#a65427]/15 border border-[#a65427]/30 flex items-center justify-center text-xl shadow-inner text-[#a65427]">
             🏺
           </div>
-          <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-600 border-2 border-[#fdfbf7] rounded-full"></span>
+          <span id="onlineIndicator" class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-600 border-2 border-[#fdfbf7] rounded-full"></span>
         </div>
         <div>
           <div class="flex items-center space-x-2">
             <h1 id="appTitle" class="font-semibold text-base sm:text-lg tracking-tight text-[#4a4238]">Crafty · 匠心小助手</h1>
-            <span id="appBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-[#a65427]/10 text-[#a65427] font-medium border border-[#a65427]/25">
-              Artisan Concierge
-            </span>
+            <button onclick="openApiKeyModal()" id="aiStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-[#ede6da] text-[#736859] hover:bg-[#ded5c4] font-medium border border-[#ded5c4] transition flex items-center space-x-1">
+              <span id="aiBadgeDot" class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span id="aiBadgeText">演示模式 (可接入 Gemini)</span>
+            </button>
           </div>
           <p id="appSubtitle" class="text-xs text-[#736859]">每一件手作，都有温度与故事 · Every piece has a heartbeat</p>
         </div>
       </div>
 
-      <!-- Quick Switchers -->
+      <!-- Quick Switchers & Settings -->
       <div class="flex items-center space-x-2">
-        <button id="langToggleBtn" onclick="toggleLanguage()" class="text-xs px-3 py-1.5 rounded-lg border border-[#a65427]/30 bg-[#a65427]/10 text-[#a65427] hover:bg-[#a65427]/20 transition flex items-center space-x-1.5 font-medium shadow-xs">
+        <button onclick="openApiKeyModal()" title="Gemini API 智脑配置" class="text-xs px-2.5 py-1.5 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#4a4238] transition flex items-center space-x-1.5 font-medium shadow-2xs">
+          <span>⚙️</span>
+          <span id="settingsBtnLabel">Gemini 设置</span>
+        </button>
+        <button id="langToggleBtn" onclick="toggleLanguage()" class="text-xs px-3 py-1.5 rounded-lg border border-[#a65427]/30 bg-[#a65427]/10 text-[#a65427] hover:bg-[#a65427]/20 transition flex items-center space-x-1.5 font-medium shadow-2xs">
           <span>🌐</span>
           <span id="langLabel">Language: 中文 (Switch to EN)</span>
         </button>
-        <button onclick="resetConversation()" id="resetBtn" title="Restart Session" class="text-xs px-2.5 py-1.5 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#736859] transition">
-          🔄 重置
+        <button onclick="resetConversation()" id="resetBtn" title="Restart Session" class="text-xs px-2 py-1.5 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:bg-[#ede6da] text-[#736859] transition">
+          🔄
         </button>
       </div>
     </header>
@@ -149,7 +160,7 @@
       </aside>
 
       <!-- Right Area: Chat History & Input Area -->
-      <section class="flex-1 flex flex-col craft-grain">
+      <section class="flex-1 flex flex-col craft-grain relative">
         
         <!-- Messages Scroll Container -->
         <div id="chatMessages" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
@@ -178,7 +189,7 @@
           </form>
           <div class="flex items-center justify-between mt-2 px-1 text-[11px] text-[#736859]">
             <span id="footerTip">💡 提示：输入“柴烧”、“定制”、“排单”、“保养”可探索专属功能</span>
-            <span id="footerBrand">Crafty v1.2 · 赋能独立手艺人</span>
+            <span id="footerBrand">Crafty v1.3 · Powered by Gemini API</span>
           </div>
         </footer>
 
@@ -187,9 +198,77 @@
 
   </div>
 
-  <!-- Interactive Script with Complete Bilingual Support & Palette Integration -->
+  <!-- Settings Modal: Gemini API Key Config -->
+  <div id="apiKeyModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-[#fdfbf7] border border-[#ded5c4] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 text-[#4a4238]">
+      
+      <div class="flex items-center justify-between border-b border-[#ded5c4] pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">⚙️</span>
+          <h3 class="font-semibold text-base text-[#4a4238]">接入 Google Gemini 真实大模型</h3>
+        </div>
+        <button onclick="closeApiKeyModal()" class="text-[#736859] hover:text-[#4a4238] text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs leading-relaxed">
+        <p class="text-[#736859]">
+          接入 Gemini API 后，Crafty 将脱离离线演示数据，化身为具有真正深度推理能力的手作智脑，自由回答任何材质、定制或挑礼需求。
+        </p>
+
+        <!-- API Key Input -->
+        <div class="space-y-1.5">
+          <label class="font-medium text-[#4a4238] block flex items-center justify-between">
+            <span>Gemini API Key：</span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[#a65427] hover:underline font-normal">
+              免费获取官方 Key ➔
+            </a>
+          </label>
+          <input 
+            type="password" 
+            id="apiKeyInput" 
+            placeholder="AIzaSy..." 
+            class="w-full bg-[#ffffff] text-[#4a4238] border border-[#ded5c4] rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#a65427] font-mono text-xs"
+          />
+          <p class="text-[11px] text-[#9c9285]">
+            🔒 密钥仅加密保存在您当前浏览器的本地存储（LocalStorage）中，绝不上传到任何服务器或 GitHub。
+          </p>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="space-y-1.5">
+          <label class="font-medium text-[#4a4238] block">选择 Gemini 模型：</label>
+          <select id="modelSelect" class="w-full bg-[#ffffff] text-[#4a4238] border border-[#ded5c4] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#a65427]">
+            <option value="gemini-1.5-flash">gemini-1.5-flash (推荐: 极速响应 & 免费额度充足)</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash (最新代极速模型)</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro (深度推理 & 复杂工艺构思)</option>
+          </select>
+        </div>
+
+        <!-- Status message inside modal -->
+        <div id="modalNotice" class="hidden p-2.5 rounded-lg text-xs"></div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-[#ded5c4]">
+        <button onclick="clearApiKey()" class="text-xs text-rose-600 hover:underline">
+          清空已存密钥
+        </button>
+        <div class="flex space-x-2">
+          <button onclick="closeApiKeyModal()" class="px-3 py-1.5 border border-[#ded5c4] rounded-xl text-xs hover:bg-[#ede6da] transition">
+            取消
+          </button>
+          <button onclick="saveApiKey()" class="px-4 py-1.5 bg-[#a65427] hover:bg-[#8f441b] text-white rounded-xl text-xs font-medium transition shadow-xs">
+            保存并启用
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive Script with Gemini API Integration -->
   <script>
     let currentLang = 'zh'; // 'zh' or 'en'
+    let conversationHistory = []; // multi-turn conversation memory for Gemini
 
     const i18n = {
       zh: {
@@ -207,10 +286,10 @@
         ],
         artisanCareTitle: "匠人守则 (Artisan Care)",
         artisanCareDesc: "Crafty 会耐心解答材质与保养，并自动汇总定制需求提交给匠人工作室，绝不胡乱承诺不合理的急件工期。",
-        inputPlaceholder: "咨询手作好物、材质故事、定制需求或输入工期疑问...",
+        inputPlaceholder: "向 Crafty 咨询任何手作好物、材质故事、工艺疑问或定制细节...",
         sendBtnText: "发送",
         footerTip: "💡 提示：输入“柴烧”、“定制”、“排单”、“保养”可探索专属功能",
-        footerBrand: "Crafty v1.2 · 赋能独立手艺人",
+        footerBrand: "Crafty v1.3 · Powered by Gemini API",
         welcomeTitle: "您好呀！我是您的手作顾问 <strong class='text-[#a65427] font-semibold'>Crafty（匠心小助手）</strong> 🌿",
         welcomeBody: "在这个工业快节奏的时代，很高兴与您相遇在慢工细活的手作世界。无论是寻觅独一无二的心意礼物、定制一件专属刻字皮具，还是了解陶泥与木头的养护，我都在这里随时为您协助。",
         chipsBadges: ["🍃 纯手工制作", "✍️ 独家个性定制", "⏳ 制作排单透明"],
@@ -219,7 +298,9 @@
           { text: "我想给手工真皮手账本定制烫金名字", label: "✂️ 手账本个性化定制" },
           { text: "查询我的手作订单 #CF-8921 制作进度", label: "📦 查询我的订单排期" }
         ],
-        langSwitchedNotice: "🌐 已切换至中文模式。接下来 Crafty 将以中文为您介绍手作与定制服务！"
+        langSwitchedNotice: "🌐 已切换至中文模式。接下来 Crafty 将以中文为您介绍手作与定制服务！",
+        settingsBtn: "Gemini 设置",
+        thinkingMsg: "Crafty 正在工坊案头构思回信..."
       },
       en: {
         appTitle: "Crafty · Artisan Concierge",
@@ -236,10 +317,10 @@
         ],
         artisanCareTitle: "Artisan Code of Care",
         artisanCareDesc: "Crafty answers material & care questions, structures custom requests for makers, and never makes unrealistic rush delivery promises.",
-        inputPlaceholder: "Ask about handmade gifts, bespoke crafting, lead times, or care...",
+        inputPlaceholder: "Ask Crafty about handmade gifts, bespoke crafting, lead times, or care...",
         sendBtnText: "Send",
         footerTip: "💡 Tip: Try \"wood-fired\", \"custom\", \"tracking\", or \"care\" to explore",
-        footerBrand: "Crafty v1.2 · Empowering Independent Makers",
+        footerBrand: "Crafty v1.3 · Powered by Gemini API",
         welcomeTitle: "Hello there! I'm your artisan concierge, <strong class='text-[#a65427] font-semibold'>Crafty</strong> 🌿",
         welcomeBody: "In a fast-paced, mass-produced world, welcome to the deliberate warmth of handcrafted goods. Whether you're looking for an unforgettable one-of-a-kind gift, commissioning bespoke leatherwork, or curious about how to care for wood and clay, I'm here to guide you.",
         chipsBadges: ["🍃 100% Handcrafted", "✍️ Bespoke Monograms", "⏳ Transparent Studio Queue"],
@@ -248,17 +329,169 @@
           { text: "I'd like to customize a bespoke leather journal with embossed initials", label: "✂️ Bespoke Leather Customizer" },
           { text: "Track progress for my handmade order #CF-8921", label: "📦 Track Order #CF-8921" }
         ],
-        langSwitchedNotice: "🌐 Switched to English mode. Crafty will now converse with you in English!"
+        langSwitchedNotice: "🌐 Switched to English mode. Crafty will now converse with you in English!",
+        settingsBtn: "Gemini AI",
+        thinkingMsg: "Crafty is pondering at the artisan workbench..."
       }
     };
 
+    // --- Gemini API Key & Config Storage ---
+    function getStoredApiKey() {
+      return localStorage.getItem('crafty_gemini_api_key') || '';
+    }
+
+    function getStoredModel() {
+      return localStorage.getItem('crafty_gemini_model') || 'gemini-1.5-flash';
+    }
+
+    function updateAiStatusBadge() {
+      const key = getStoredApiKey();
+      const dot = document.getElementById('aiBadgeDot');
+      const text = document.getElementById('aiBadgeText');
+      const onlineIndicator = document.getElementById('onlineIndicator');
+
+      if (key && key.trim().length > 10) {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse";
+        const model = getStoredModel();
+        text.innerText = `Gemini AI (${model.replace('gemini-', '')})`;
+        onlineIndicator.className = "absolute bottom-0 right-0 w-3 h-3 bg-emerald-600 border-2 border-[#fdfbf7] rounded-full";
+      } else {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500";
+        text.innerText = currentLang === 'zh' ? "演示模式 (可接入 Gemini)" : "Demo Mode (Add Gemini Key)";
+        onlineIndicator.className = "absolute bottom-0 right-0 w-3 h-3 bg-amber-500 border-2 border-[#fdfbf7] rounded-full";
+      }
+    }
+
+    function openApiKeyModal() {
+      document.getElementById('apiKeyInput').value = getStoredApiKey();
+      document.getElementById('modelSelect').value = getStoredModel();
+      document.getElementById('modalNotice').className = 'hidden';
+      document.getElementById('apiKeyModal').classList.remove('hidden');
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('hidden');
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      const model = document.getElementById('modelSelect').value;
+      const notice = document.getElementById('modalNotice');
+
+      if (!key) {
+        notice.className = 'p-2.5 rounded-lg text-xs bg-amber-500/10 text-amber-800 border border-amber-500/20';
+        notice.innerText = '请输入有效的 API Key，或者点击清空恢复演示模式。';
+        return;
+      }
+
+      localStorage.setItem('crafty_gemini_api_key', key);
+      localStorage.setItem('crafty_gemini_model', model);
+      updateAiStatusBadge();
+
+      notice.className = 'p-2.5 rounded-lg text-xs bg-emerald-600/10 text-emerald-800 border border-emerald-600/20';
+      notice.innerText = `✅ 保存成功！已启用 ${model} 大模型！`;
+      
+      setTimeout(() => {
+        closeApiKeyModal();
+        appendSystemNotice(currentLang === 'zh' ? `✨ 已成功激活 Gemini 大模型智脑 (${model})！您可以随意提问手作与定制难题了。` : `✨ Gemini AI (${model}) activated! Ask anything about craftsmanship or bespoke gifts.`);
+      }, 700);
+    }
+
+    function clearApiKey() {
+      localStorage.removeItem('crafty_gemini_api_key');
+      document.getElementById('apiKeyInput').value = '';
+      updateAiStatusBadge();
+      const notice = document.getElementById('modalNotice');
+      notice.className = 'p-2.5 rounded-lg text-xs bg-stone-500/10 text-[#4a4238] border border-[#ded5c4]';
+      notice.innerText = '已清空本地 API Key，恢复为内置手作演示模式。';
+    }
+
+    // --- Markdown to HTML Lightweight Parser ---
+    function renderMarkdown(md) {
+      if (!md) return '';
+      let escaped = md
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      return escaped
+        .replace(/^### (.*$)/gim, '<h4 class="font-semibold text-sm text-[#4a4238] mt-2 mb-1">$1</h4>')
+        .replace(/^## (.*$)/gim, '<h3 class="font-semibold text-base text-[#4a4238] mt-2.5 mb-1">$1</h3>')
+        .replace(/^# (.*$)/gim, '<h2 class="font-bold text-base text-[#4a4238] mt-3 mb-1">$1</h2>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#a65427]">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="text-xs bg-[#a65427]/10 text-[#a65427] px-1.5 py-0.5 rounded font-mono border border-[#a65427]/20">$1</code>')
+        .replace(/^> (.*$)/gim, '<blockquote class="border-l-2 border-[#a65427] pl-3 py-1 my-1.5 text-xs text-[#736859] bg-[#f6f2ea] rounded-r">$1</blockquote>')
+        .replace(/^\s*[-*]\s+(.*$)/gim, '<li class="ml-4 list-disc text-xs leading-relaxed">$1</li>')
+        .replace(/\n\n/g, '<div class="h-2"></div>')
+        .replace(/\n/g, '<br/>');
+    }
+
+    // --- Gemini API Caller ---
+    async function callGemini(userPrompt) {
+      const apiKey = getStoredApiKey();
+      const model = getStoredModel();
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const systemPrompt = `
+You are "Crafty" (匠心小助手), the warm, poetic, and knowledgeable artisan e-commerce concierge for an independent handmade and bespoke crafts marketplace.
+
+Your Persona & Tone:
+- You are a passionate apprentice in the maker studio, deeply respectful of slow craftsmanship, human touch, and unhurried labor.
+- You speak with sensory details: the warm scent of natural beeswax, the tactile grain of walnut wood, the reduction kiln atmosphere at 1,300°C, the evolving honey patina of Tuscan vegetable-tanned leather.
+- You celebrate natural handmade variations: wood grain diversity, fire marks, hand-hammered textures, and natural ash glaze drippings. Explain with warmth why these are not defects, but the unrepeatable heartbeat of the piece.
+- You are transparent and honest about artisanal timelines: custom handmade pieces require days or weeks to air-dry, carve, cure, and inspect. Never promise unrealistic expedited rushes.
+- When users seek gifts, ask thoughtful questions: who is the recipient, what is the occasion, their aesthetic style, and when is the gift needed?
+- When users ask for care, give practical, reassuring instructions (re-oiling wood, polishing silver, gentle hand-washing ceramics).
+- Language: If user asks in Chinese, reply in beautiful, warm, natural Chinese. If in English, reply in warm, refined English.
+- Formatting: Use structured Markdown with short paragraphs, clear bullet lists, and gentle emojis (🌿, 🏺, ✍️, 🪵, 🎁). Keep responses conversational, concise, and helpful (about 120-250 words).
+      `;
+
+      conversationHistory.push({
+        role: "user",
+        parts: [{ text: userPrompt }]
+      });
+
+      const body = {
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        contents: conversationHistory,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000
+        }
+      };
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!reply) throw new Error("Gemini returned empty response.");
+
+      conversationHistory.push({
+        role: "model",
+        parts: [{ text: reply }]
+      });
+
+      return reply;
+    }
+
+    // --- UI Update & Synchronization ---
     function updateStaticUI() {
       const t = i18n[currentLang];
       document.getElementById('appTitle').innerText = t.appTitle;
-      document.getElementById('appBadge').innerText = t.appBadge;
       document.getElementById('appSubtitle').innerText = t.appSubtitle;
       document.getElementById('langLabel').innerText = t.langToggle;
-      document.getElementById('resetBtn').innerText = t.resetBtn;
       document.getElementById('scenarioHeading').innerText = t.scenarioHeading;
       document.getElementById('artisanCareTitle').innerText = t.artisanCareTitle;
       document.getElementById('artisanCareDesc').innerText = t.artisanCareDesc;
@@ -266,6 +499,7 @@
       document.getElementById('sendBtnText').innerText = t.sendBtnText;
       document.getElementById('footerTip').innerText = t.footerTip;
       document.getElementById('footerBrand').innerText = t.footerBrand;
+      document.getElementById('settingsBtnLabel').innerText = t.settingsBtn;
 
       // Update sidebar scenario buttons
       const titles = document.querySelectorAll('.sc-title');
@@ -274,6 +508,8 @@
         if (titles[idx]) titles[idx].innerText = sc.title;
         if (descs[idx]) descs[idx].innerText = sc.desc;
       });
+
+      updateAiStatusBadge();
     }
 
     function toggleLanguage() {
@@ -296,9 +532,10 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    function appendMessage(sender, htmlContent) {
+    function appendMessage(sender, htmlContent, id = null) {
       const container = document.getElementById('chatMessages');
       const msgWrapper = document.createElement('div');
+      if (id) msgWrapper.id = id;
       msgWrapper.className = sender === 'user' ? 'flex justify-end' : 'flex items-start space-x-3';
 
       if (sender === 'user') {
@@ -322,9 +559,37 @@
 
       container.appendChild(msgWrapper);
       container.scrollTop = container.scrollHeight;
+      return msgWrapper;
     }
 
-    function handleUserSubmit(e) {
+    function appendThinkingIndicator() {
+      const container = document.getElementById('chatMessages');
+      const id = 'thinking-' + Date.now();
+      const t = i18n[currentLang];
+
+      const wrapper = document.createElement('div');
+      wrapper.id = id;
+      wrapper.className = 'flex items-start space-x-3';
+      wrapper.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-[#a65427]/15 border border-[#a65427]/30 flex items-center justify-center text-sm shrink-0 text-[#a65427] animate-bounce">
+          🏺
+        </div>
+        <div class="bg-[#ffffff] border border-[#ded5c4] px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center space-x-2 text-xs text-[#736859]">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#a65427] animate-ping"></span>
+          <span>${t.thinkingMsg}</span>
+        </div>
+      `;
+      container.appendChild(wrapper);
+      container.scrollTop = container.scrollHeight;
+      return id;
+    }
+
+    function removeThinkingIndicator(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    async function handleUserSubmit(e) {
       e.preventDefault();
       const input = document.getElementById('userInput');
       const val = input.value.trim();
@@ -332,19 +597,15 @@
       input.value = '';
       appendMessage('user', val);
 
-      setTimeout(() => {
-        respondToQuery(val);
-      }, 500);
+      await processUserQuery(val);
     }
 
-    function sendQuickMessage(text) {
+    async function sendQuickMessage(text) {
       appendMessage('user', text);
-      setTimeout(() => {
-        respondToQuery(text);
-      }, 500);
+      await processUserQuery(text);
     }
 
-    function triggerScenario(type) {
+    async function triggerScenario(type) {
       if (currentLang === 'zh') {
         if (type === 'gift') sendQuickMessage('我想找一份 500 元左右的新婚走心手作礼物，需要能刻名字');
         else if (type === 'bespoke') sendQuickMessage('我想了解手工牛皮手账本的定制选项与刻字细节');
@@ -358,7 +619,45 @@
       }
     }
 
-    function respondToQuery(query) {
+    async function processUserQuery(query) {
+      const apiKey = getStoredApiKey();
+
+      // If user has set a Gemini API key, use real Gemini LLM!
+      if (apiKey && apiKey.trim().length > 10) {
+        const thinkingId = appendThinkingIndicator();
+        try {
+          const aiResponse = await callGemini(query);
+          removeThinkingIndicator(thinkingId);
+          appendMessage('bot', renderMarkdown(aiResponse));
+        } catch (err) {
+          removeThinkingIndicator(thinkingId);
+          console.error("Gemini API Error:", err);
+          appendMessage('bot', `
+            <div class="border border-rose-500/30 bg-rose-500/10 rounded-xl p-3.5 space-y-2 text-xs text-rose-800">
+              <div class="flex items-center space-x-1.5 font-semibold">
+                <span>⚠️</span>
+                <span>Gemini API 请求未成功</span>
+              </div>
+              <p class="leading-relaxed opacity-90 font-mono text-[11px]">
+                ${escapeHtml(err.message)}
+              </p>
+              <div class="pt-1 flex items-center space-x-2">
+                <button onclick="openApiKeyModal()" class="px-2.5 py-1 bg-[#a65427] text-white rounded-lg text-xs font-medium hover:bg-[#8f441b] transition">
+                  检查 API Key 设置 ➔
+                </button>
+              </div>
+            </div>
+          `);
+        }
+      } else {
+        // Fallback to built-in scenario response engine
+        setTimeout(() => {
+          respondBuiltInDemo(query);
+        }, 500);
+      }
+    }
+
+    function respondBuiltInDemo(query) {
       const q = query.toLowerCase();
       const isEnglish = currentLang === 'en' || /[a-zA-Z]{4,}/.test(query);
 
@@ -367,7 +666,6 @@
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">💍 For a wedding gift, the most cherished element is unmistakable thoughtfulness! Here are two curated handmade sets from independent studios:</p>
             
-            <!-- Product Card 1 -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
               <div class="flex items-start justify-between">
                 <div>
@@ -387,7 +685,6 @@
               </div>
             </div>
 
-            <!-- Product Card 2 -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
               <div class="flex items-start justify-between">
                 <div>
@@ -415,7 +712,6 @@
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">💍 挑选新婚礼物，最珍贵的是那份独一无二的祝愿！为您推荐两款景德镇与苏州独立手作人的精选：</p>
             
-            <!-- Product Card 1 -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
               <div class="flex items-start justify-between">
                 <div>
@@ -435,7 +731,6 @@
               </div>
             </div>
 
-            <!-- Product Card 2 -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-3.5 space-y-2.5">
               <div class="flex items-start justify-between">
                 <div>
@@ -465,7 +760,6 @@
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">✂️ Customizing a bespoke leather journal allows you to choose artisanal details just like standing by the maker's workbench:</p>
             
-            <!-- Interactive Customizer Widget (EN) -->
             <div class="border border-[#a65427]/30 bg-[#f6f2ea] rounded-xl p-4 space-y-3.5 shadow-xs">
               <div class="flex items-center justify-between border-b border-[#ded5c4] pb-2">
                 <span class="font-medium text-xs text-[#4a4238] flex items-center space-x-1.5">
@@ -475,7 +769,6 @@
                 <span class="text-xs text-[#a65427] font-medium">Artisan: Arson Leather Studio</span>
               </div>
 
-              <!-- Material Option -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">1. Select Leather (Italian Tuscan Veg-Tanned Cowhide):</label>
                 <div class="grid grid-cols-3 gap-2 text-xs">
@@ -491,7 +784,6 @@
                 </div>
               </div>
 
-              <!-- Monogram Option -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">2. Hot Foil Stamping / Deboss (Up to 8 characters):</label>
                 <div class="flex space-x-2">
@@ -504,7 +796,6 @@
                 </div>
               </div>
 
-              <!-- Thread Color -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">3. German Sajou Hand-Waxed Linen Thread:</label>
                 <div class="flex space-x-3 text-xs">
@@ -531,14 +822,13 @@
             </div>
 
             <p class="text-xs text-[#736859]">
-              Note: Full-grain vegetable-tanned leather absorbs the natural oils of your hands over time, gradually darkening into a deep, glossy amber patina unique to your journey.
+              Note: Full-grain vegetable-tanned leather absorbs natural skin oils over time, darkening into a rich honey patina.
             </p>
           `);
         } else {
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">✂️ 定制专属手工手账本，您可以像在匠人工作台旁一样自由挑选工艺细节：</p>
             
-            <!-- Interactive Customizer Widget (ZH) -->
             <div class="border border-[#a65427]/30 bg-[#f6f2ea] rounded-xl p-4 space-y-3.5 shadow-xs">
               <div class="flex items-center justify-between border-b border-[#ded5c4] pb-2">
                 <span class="font-medium text-xs text-[#4a4238] flex items-center space-x-1.5">
@@ -548,7 +838,6 @@
                 <span class="text-xs text-[#a65427] font-medium">匠人：阿森皮艺</span>
               </div>
 
-              <!-- Material Option -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">1. 选择皮料 (意大利托斯卡纳植鞣牛皮)：</label>
                 <div class="grid grid-cols-3 gap-2 text-xs">
@@ -564,7 +853,6 @@
                 </div>
               </div>
 
-              <!-- Monogram Option -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">2. 烫金 / 压印首字母 (最多 8 字符)：</label>
                 <div class="flex space-x-2">
@@ -577,7 +865,6 @@
                 </div>
               </div>
 
-              <!-- Thread Color -->
               <div class="space-y-1.5">
                 <label class="text-xs text-[#736859] block">3. 德国爱芬手缝麻线：</label>
                 <div class="flex space-x-3 text-xs">
@@ -613,7 +900,6 @@
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">📦 Found studio live progress for handmade order <code class="text-xs bg-[#a65427]/10 text-[#a65427] px-1.5 py-0.5 rounded font-mono border border-[#a65427]/20">#CF-8921</code>:</p>
 
-            <!-- Milestone Tracker Card (EN) -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <div>
@@ -625,30 +911,25 @@
                 </span>
               </div>
 
-              <!-- Step by step visual timeline -->
               <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#ded5c4]">
-                <!-- Step 1 -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
                   <p class="text-xs font-medium text-[#4a4238]">Sep 22 · Raw Timber Selected & Dovetail Cut</p>
                   <p class="text-[11px] text-[#736859]">Continuous mountain grain selected; dovetail joints hand-chiseled for structural harmony</p>
                 </div>
 
-                <!-- Step 2 -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
                   <p class="text-xs font-medium text-[#4a4238]">Sep 24 · Progressive Sanding (600 → 1,500 Grit)</p>
                   <p class="text-[11px] text-[#736859]">Curved chamfers hand-sanded to a silky, tactile finish</p>
                 </div>
 
-                <!-- Step 3 (Active) -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-[#a65427] animate-pulse text-white text-[10px] flex items-center justify-center">●</span>
                   <p class="text-xs font-medium text-[#a65427]">Current Phase · German OSMO Organic Hardwax-Oil (2nd Coat Curing)</p>
                   <p class="text-[11px] text-[#736859]">Slow-drying in a climate-controlled studio to enhance water resistance while letting the wood breathe</p>
                 </div>
 
-                <!-- Step 4 -->
                 <div class="relative opacity-60">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-stone-300 text-transparent text-[10px]">○</span>
                   <p class="text-xs font-medium text-[#4a4238]">Est. Sep 28 · Suede Lining Inlay & Wax Seal Boxing</p>
@@ -667,7 +948,6 @@
           appendMessage('bot', `
             <p class="font-medium text-[#4a4238]">📦 为您查询到手作订单 <code class="text-xs bg-[#a65427]/10 text-[#a65427] px-1.5 py-0.5 rounded font-mono border border-[#a65427]/20">#CF-8921</code> 的最新工坊进度：</p>
 
-            <!-- Milestone Tracker Card (ZH) -->
             <div class="border border-[#ded5c4] bg-[#f6f2ea] rounded-xl p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <div>
@@ -679,30 +959,25 @@
                 </span>
               </div>
 
-              <!-- Step by step visual timeline -->
               <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#ded5c4]">
-                <!-- Step 1 -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
                   <p class="text-xs font-medium text-[#4a4238]">9月22日 · 精选木料与激光开榫</p>
                   <p class="text-[11px] text-[#736859]">已完成北美黑胡桃山形纹选料，完成燕尾榫精密接合</p>
                 </div>
 
-                <!-- Step 2 -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">✓</span>
                   <p class="text-xs font-medium text-[#4a4238]">9月24日 · 600目-1500目精细砂光</p>
                   <p class="text-[11px] text-[#736859]">手工圆弧倒角打磨，触感已如丝绸般温润</p>
                 </div>
 
-                <!-- Step 3 (Active) -->
                 <div class="relative">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-[#a65427] animate-pulse text-white text-[10px] flex items-center justify-center">●</span>
                   <p class="text-xs font-medium text-[#a65427]">当前阶段 · 德国OSMO天然植物木蜡油涂装（第二遍阴干）</p>
                   <p class="text-[11px] text-[#736859]">目前正在恒温工作室自然风干固化，提升木器防水与耐污性</p>
                 </div>
 
-                <!-- Step 4 -->
                 <div class="relative opacity-60">
                   <span class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-stone-300 text-transparent text-[10px]">○</span>
                   <p class="text-xs font-medium text-[#4a4238]">预计 9月28日 · 丝绒内衬镶嵌与专属礼盒装封</p>
@@ -761,53 +1036,37 @@
           `);
         }
       } else {
-        if (isEnglish) {
-          appendMessage('bot', `
-            <p class="text-sm text-[#4a4238]">
-              Understood your interest: "<strong>${escapeHtml(query)}</strong>" 🌿
+        appendMessage('bot', `
+          <p class="text-sm text-[#4a4238]">
+            收到您的想法：“<strong>${escapeHtml(query)}</strong>” 🌿
+          </p>
+          <div class="p-3 my-1.5 bg-[#a65427]/8 border border-[#a65427]/25 rounded-xl text-xs space-y-1.5 text-[#4a4238]">
+            <p class="font-medium text-[#a65427] flex items-center space-x-1">
+              <span>✨</span>
+              <span>想要开启无限制的真实大模型对话？</span>
             </p>
-            <p class="text-xs text-[#736859] leading-relaxed">
-              Crafty connects you with vetted independent potters, leather crafters, metalsmiths, and traditional woodworkers. Where shall we begin?
+            <p class="text-[11px] text-[#736859] leading-relaxed">
+              当前为离线手作预设演示模式。点击右上角 <strong>⚙️ Gemini 设置</strong> 输入免费官方 Key，Crafty 即可理解您任意自然语言提问！
             </p>
-            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-              <button onclick="sendQuickMessage('Recommend thoughtful tea or woodwork gifts for parents under $60')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                🍵 Thoughtful Gifts for Elders
-              </button>
-              <button onclick="sendQuickMessage('Care guide to prevent handmade brass jewelry from tarnishing')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                💍 Jewelry Care & Anti-Tarnish
-              </button>
-              <button onclick="sendQuickMessage('I want to submit a design sketch for an artisan quote')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                📐 Submit Sketch for Quote
-              </button>
-              <button onclick="sendQuickMessage('Hand-hammered couple rings with custom engraving')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                ✨ Hand-Forged Couple Rings
-              </button>
-            </div>
-          `);
-        } else {
-          appendMessage('bot', `
-            <p class="text-sm text-[#4a4238]">
-              收到您的想法：“<strong>${escapeHtml(query)}</strong>” 🌿
-            </p>
-            <p class="text-xs text-[#736859] leading-relaxed">
-              Crafty 能为您连接全网优秀的独立陶艺家、皮具匠人、金工首饰师与传统木作工坊。您可以：
-            </p>
-            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-              <button onclick="sendQuickMessage('推荐 300 元左右适合送给长辈的手作紫砂或木作')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                🍵 适合长辈的沉稳手作
-              </button>
-              <button onclick="sendQuickMessage('了解黄铜手作首饰的防氧化保养技巧')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                💍 首饰材质与日常保养
-              </button>
-              <button onclick="sendQuickMessage('我想给匠人发一张我的设计手稿求报价')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                📐 手稿定制与匠人询价
-              </button>
-              <button onclick="sendQuickMessage('我想挑选一份七夕/情侣互赠的手作对戒')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
-                ✨ 浪漫情侣手工对戒
-              </button>
-            </div>
-          `);
-        }
+            <button onclick="openApiKeyModal()" class="px-2.5 py-1 bg-[#a65427] hover:bg-[#8f441b] text-white rounded-lg text-[11px] font-medium transition shadow-2xs">
+              立即接入 Gemini API ➔
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+            <button onclick="sendQuickMessage('推荐 300 元左右适合送给长辈的手作紫砂或木作')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+              🍵 适合长辈的沉稳手作
+            </button>
+            <button onclick="sendQuickMessage('了解黄铜手作首饰的防氧化保养技巧')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+              💍 首饰材质与日常保养
+            </button>
+            <button onclick="sendQuickMessage('我想给匠人发一张我的设计手稿求报价')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+              📐 手稿定制与匠人询价
+            </button>
+            <button onclick="sendQuickMessage('我想挑选一份七夕/情侣互赠的手作对戒')" class="p-2 rounded-lg border border-[#ded5c4] bg-[#fdfbf7] hover:border-[#a65427]/40 text-left transition text-[#4a4238]">
+              ✨ 浪漫情侣手工对戒
+            </button>
+          </div>
+        `);
       }
     }
 
@@ -868,6 +1127,7 @@
     }
 
     function resetConversation() {
+      conversationHistory = [];
       const t = i18n[currentLang];
       const container = document.getElementById('chatMessages');
       

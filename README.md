@@ -9,12 +9,27 @@ Crafty is an AI conversational assistant designed specifically for handmade, art
 
 ## ✨ Key Features
 
+- **🤖 Powered by Google Gemini API**: Built-in support for live Gemini models (`gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-1.5-pro`) with Crafty's domain system prompt and multi-turn context memory.
 - **🎁 Smart Gift Concierge**: Recommends personalized handmade gifts while automatically checking artisan lead times against the buyer's deadline.
 - **✂️ Bespoke Customizer Co-Pilot**: Interactive configurator for materials (Tuscan veg-tanned leather, stoneware pottery), monograms, and finishes. Automatically generates structured tickets for artisan studios.
 - **🪵 Milestone Craft Timeline**: Transparent progress tracking across artisan fabrication stages (e.g. *Raw Timber Selected → 1500-Grit Sanding → Hardwax-Oil Curing → Dispatched*).
 - **🏺 "Behind the Craft" Storyteller**: Explains natural variations (wood-fired fly ash glazes, leather patina) and proactive material care tips.
 - **🌐 100% Seamless Bilingual Support**: Instant toggling between English and Chinese across all UI components and conversational flows.
 - **🎨 Warm Artisan Palette**: Built with a tactile color palette (`#f5f2ed` warm off-white/beige canvas and `#4a4238` dark muted ink-brown typography).
+
+---
+
+## 🤖 Connecting the Google Gemini API
+
+Crafty supports real-time conversational intelligence powered by Google Gemini:
+
+1. Obtain a free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Open `index.html` (or your GitHub Pages site) in your browser.
+3. Click the **⚙️ Gemini 设置 (Settings)** button in the top navigation bar.
+4. Paste your API Key and choose your preferred model (e.g., `gemini-1.5-flash`).
+5. Click **保存并启用 (Save & Activate)**.
+
+> **Security Note**: Your API key is stored strictly in your browser's private `localStorage` and is never committed to GitHub or sent to any third-party server. When no key is entered, Crafty falls back gracefully to the built-in scenario demo mode.
 
 ---
 
@@ -69,3 +84,4 @@ python3 -m http.server 8080
 ## 📄 Documentation
 
 For full system architecture, entity schemas, tool definitions, and conversation design, check [`docs/crafty_chatbot_design.md`](docs/crafty_chatbot_design.md).
+
