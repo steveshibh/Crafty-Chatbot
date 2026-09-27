@@ -268,6 +268,9 @@
     </div>
   </div>
 
+  <!-- Optional Local Config (gitignored, for local development) -->
+  <script src="config.js"></script>
+
   <!-- Interactive Script with Gemini API Integration -->
   <script>
     let currentLang = 'zh'; // 'zh' or 'en'
@@ -339,12 +342,50 @@
     };
 
     // --- Gemini API Key & Config Storage ---
+    function checkUrlHashForApiKey() {
+      if (!window.location.hash) return;
+      try {
+        const hashStr = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+        const params = new URLSearchParams(hashStr);
+        const keyFromHash = params.get('key');
+        const modelFromHash = params.get('model');
+        if (keyFromHash && keyFromHash.trim().startsWith('AIzaSy')) {
+          localStorage.setItem('crafty_gemini_api_key', keyFromHash.trim());
+          if (modelFromHash) {
+            localStorage.setItem('crafty_gemini_model', modelFromHash.trim());
+          }
+          // Clean hash from address bar without reloading
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not parse URL hash for API key:', e);
+      }
+    }
+
     function getStoredApiKey() {
-      return localStorage.getItem('crafty_gemini_api_key') || '';
+      // 1. Manually saved in localStorage
+      const stored = localStorage.getItem('crafty_gemini_api_key');
+      if (stored && stored.trim()) return stored.trim();
+
+      // 2. Local config file (gitignored, for local development)
+      if (window.CRAFTY_LOCAL_CONFIG?.geminiApiKey) {
+        return window.CRAFTY_LOCAL_CONFIG.geminiApiKey.trim();
+      }
+
+      return '';
     }
 
     function getStoredModel() {
-      return localStorage.getItem('crafty_gemini_model') || 'gemini-2.0-flash';
+      const stored = localStorage.getItem('crafty_gemini_model');
+      if (stored && stored.trim()) return stored.trim();
+
+      if (window.CRAFTY_LOCAL_CONFIG?.defaultModel) {
+        return window.CRAFTY_LOCAL_CONFIG.defaultModel.trim();
+      }
+
+      return 'gemini-2.0-flash';
     }
 
     function updateAiStatusBadge() {
@@ -1201,6 +1242,7 @@ Your Persona & Tone:
 
     // Initialize UI on load
     window.addEventListener('DOMContentLoaded', () => {
+      checkUrlHashForApiKey();
       updateStaticUI();
       resetConversation();
     });
