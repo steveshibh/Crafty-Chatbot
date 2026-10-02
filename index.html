@@ -690,6 +690,12 @@
         if (m.type === 'shopee_product') {
           const wrapper = document.createElement('div');
           wrapper.className = 'crafty-msg crafty-msg--user';
+          const cardTitle = isZh ? '北美黑胡桃手工燕尾榫首饰盒' : 'FAS Black Walnut Dovetail Keepsake Box';
+          const cardVar = isZh ? '规格: 黄铜刻字定制 >' : 'Select Variation >';
+          const cardPrice = isZh ? '¥388' : '$58.00';
+          const cardBadge = isZh ? '🛡️ 100% 正品手作' : '🛡️ 100% Authentic Handcrafted';
+          const cardBuy = isZh ? '立即购买' : 'Buy Now';
+
           wrapper.innerHTML = `
             <div class="shopee-chat-product-card">
               <div class="shopee-card-main">
@@ -697,14 +703,14 @@
                   🪵
                 </div>
                 <div class="shopee-card-meta">
-                  <h4 class="shopee-card-title">${m.title}</h4>
-                  <div class="shopee-card-variation">${m.variation}</div>
-                  <div class="shopee-card-price">${m.price}</div>
-                  <div class="shopee-trust-badge">${m.authenticBadge}</div>
+                  <h4 class="shopee-card-title">${cardTitle}</h4>
+                  <div class="shopee-card-variation">${cardVar}</div>
+                  <div class="shopee-card-price">${cardPrice}</div>
+                  <div class="shopee-trust-badge">${cardBadge}</div>
                 </div>
               </div>
               <button type="button" class="shopee-buy-btn-lg" onclick="alert(currentLang==='zh'?'跳转至结算收银台':'Proceeding to checkout ($58)...')">
-                🛒 <span>${isZh ? '立即购买' : 'Buy Now'}</span>
+                🛒 <span>${cardBuy}</span>
               </button>
             </div>
             <div style="font-size:0.65rem; color:var(--crafty-muted); text-align:right; margin-top:2px;">
@@ -719,9 +725,16 @@
         if (m.type === 'shopee_faq') {
           const wrapper = document.createElement('div');
           wrapper.className = 'crafty-msg crafty-msg--bot';
+          const faqTitle = isZh ? '您可能想问：' : 'You may want to ask:';
+          const faqFooter = isZh ? '由工坊小助手自动发送 · 22:39' : 'Sent by Chat AI Assistant · 22:39';
+          const defaultFaqList = [
+            { id: 'q1', text: isZh ? '现货排期与木材纹理 (Availability & Authenticity)' : 'Availability & Authenticity' },
+            { id: 'q2', text: isZh ? '定制黄铜片刻字誓言 (Bespoke Engraving & Initials)' : 'Faulty & Warranty concerns' },
+            { id: 'q3', text: isZh ? '木蜡油阴干固化与退换 (Return Refund & Care)' : 'Return Refund' }
+          ];
           
           let listHtml = '';
-          m.questions.forEach((q) => {
+          defaultFaqList.forEach((q) => {
             listHtml += `
               <div class="shopee-faq-item" onclick="handleFaqClick('${q.id}', '${escapeHtml(q.text)}')">
                 <span>${q.text}</span>
@@ -732,12 +745,12 @@
 
           wrapper.innerHTML = `
             <div class="shopee-faq-card">
-              <div class="shopee-faq-title">${m.title}</div>
+              <div class="shopee-faq-title">${faqTitle}</div>
               <div class="shopee-faq-list">
                 ${listHtml}
               </div>
               <div class="shopee-faq-foot">
-                <span>${m.footer}</span>
+                <span>${faqFooter}</span>
               </div>
             </div>
             <!-- Clickable "Chat with Seller" pill button exactly like Shopee screenshot -->
