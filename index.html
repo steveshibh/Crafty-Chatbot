@@ -326,8 +326,6 @@
           <div class="shopee-store-sub">
             <span style="color:#10b981;">●</span>
             <span id="widgetSellerStatus">Active 47 minutes ago</span>
-            <span>|</span>
-            <span id="widgetSellerRep">🌿 16K+ returning buyers</span>
           </div>
         </div>
       </div>
@@ -356,11 +354,7 @@
     <div class="shopee-pinned-product" id="pinnedProductBar">
       <div class="shopee-pinned-thumb">🪵</div>
       <div class="shopee-pinned-details">
-        <h4 class="shopee-pinned-title" id="pinnedTitle">FAS Black Walnut Dovetail Keepsake Box [ETA: 3-5 days]</h4>
-        <div class="shopee-pinned-tags">
-          <span class="shopee-tag-pill" id="pinnedTagInquired">Inquired</span>
-          <span class="shopee-tag-pill" id="pinnedTagBatch">227 repurchased</span>
-        </div>
+        <h4 class="shopee-pinned-title" id="pinnedTitle">FAS Black Walnut Dovetail Keepsake Box</h4>
         <div class="shopee-pinned-price" id="pinnedPrice">$58.00 / ¥388</div>
       </div>
       <button type="button" class="shopee-buy-btn-sm" onclick="sendInquiryProductCard()">
@@ -466,21 +460,17 @@
         btnAddToBag: "加入购物袋",
         btnContactSeller: "联系卖家 · Chat with Seller",
         makerName: "林师傅木作旗舰店 (Lin Woodcraft Flagship Store)",
-        makerLocation: "认证卖家 · 99% 好评率 · 1.6万回头客",
+        makerLocation: "官方认证独立手作工坊",
         makerChatLink: "联系卖家 ➔",
         launcherLabel: "联系卖家 (1)",
         widgetSellerTitle: "林师傅木作旗舰店",
         widgetSellerStatus: "47分钟前活跃",
-        widgetSellerRep: "🌿 1.6万+ 回头客",
         pinnedTitle: "北美黑胡桃手工燕尾榫首饰盒 [工期: 3-5日]",
-        pinnedTagInquired: "咨询中",
-        pinnedTagBatch: "热销 227 件",
         pinnedPrice: "¥388 / $58.00",
         btnPinnedBuy: "立即购买",
         todayDate: "今日 (Today)",
         cardSelectVariation: "规格: 黄铜刻字定制 >",
         cardAuthenticBadge: "✓ 100% 正品手作",
-        cardSoldBadge: "已售 959 件",
         cardBuyNowText: "立即购买",
         faqTitle: "您可能想问：",
         faq1: "现料排期与木材纹理 (Availability & Timber)",
@@ -528,21 +518,17 @@
         btnAddToBag: "Add to Bag",
         btnContactSeller: "Chat with Seller",
         makerName: "Lin Woodcraft Flagship Store",
-        makerLocation: "Verified Seller · 99% Positive Rating",
+        makerLocation: "Verified Independent Atelier Store",
         makerChatLink: "Chat with Seller ➔",
         launcherLabel: "Chat with Seller (1)",
         widgetSellerTitle: "Lin Woodcraft Flagship Store",
         widgetSellerStatus: "Active 47 minutes ago",
-        widgetSellerRep: "🌿 16K+ returning buyers",
         pinnedTitle: "FAS Black Walnut Dovetail Keepsake Box [ETA: 3-5d]",
-        pinnedTagInquired: "Inquired",
-        pinnedTagBatch: "227 repurchased",
         pinnedPrice: "$58.00 / ¥388",
         btnPinnedBuy: "Buy Now",
         todayDate: "Today",
         cardSelectVariation: "Select Variation >",
-        cardAuthenticBadge: "✓ 100% Authentic",
-        cardSoldBadge: "959 Sold",
+        cardAuthenticBadge: "✓ 100% Authentic Handcrafted",
         cardBuyNowText: "Buy Now",
         faqTitle: "You may want to ask:",
         faq1: "Availability & Authenticity",
@@ -579,10 +565,8 @@
           time: '22:39',
           title: isZh ? '北美黑胡桃手工燕尾榫首饰盒' : 'FAS Black Walnut Dovetail Keepsake Box',
           variation: isZh ? '规格: 黄铜刻字定制 >' : 'Select Variation >',
-          rating: '5.0',
           price: isZh ? '¥388' : '$58.00',
-          soldText: isZh ? '959 件已售' : '959 Sold',
-          authenticBadge: isZh ? '🛡️ 100% 正品手作' : '🛡️ 100% Authentic',
+          authenticBadge: isZh ? '🛡️ 100% 正品手作' : '🛡️ 100% Authentic Handcrafted',
           status: '22:39 ✓'
         },
         // 2. Automated FAQ Card ("You may want to ask:")
@@ -656,12 +640,9 @@
       document.getElementById('launcherLabel').textContent = t.launcherLabel;
       document.getElementById('widgetSellerTitle').textContent = t.widgetSellerTitle;
       document.getElementById('widgetSellerStatus').textContent = t.widgetSellerStatus;
-      document.getElementById('widgetSellerRep').textContent = t.widgetSellerRep;
       document.getElementById('widgetLangBtn').textContent = t.headerLangToggle;
 
       document.getElementById('pinnedTitle').textContent = t.pinnedTitle;
-      document.getElementById('pinnedTagInquired').textContent = t.pinnedTagInquired;
-      document.getElementById('pinnedTagBatch').textContent = t.pinnedTagBatch;
       document.getElementById('pinnedPrice').textContent = t.pinnedPrice;
       document.getElementById('btnPinnedBuy').textContent = t.btnPinnedBuy;
 
@@ -714,12 +695,10 @@
               <div class="shopee-card-main">
                 <div class="shopee-card-imgbox">
                   🪵
-                  <span class="shopee-sold-tag">${m.soldText}</span>
                 </div>
                 <div class="shopee-card-meta">
                   <h4 class="shopee-card-title">${m.title}</h4>
                   <div class="shopee-card-variation">${m.variation}</div>
-                  <div class="shopee-card-rating">⭐ ${m.rating}</div>
                   <div class="shopee-card-price">${m.price}</div>
                   <div class="shopee-trust-badge">${m.authenticBadge}</div>
                 </div>
@@ -923,10 +902,8 @@
         time: getCurrentTimeStr(),
         title: isZh ? '北美黑胡桃手工燕尾榫首饰盒' : 'FAS Black Walnut Dovetail Keepsake Box',
         variation: isZh ? '规格: 黄铜刻字定制 >' : 'Select Variation >',
-        rating: '5.0',
         price: isZh ? '¥388' : '$58.00',
-        soldText: isZh ? '959 件已售' : '959 Sold',
-        authenticBadge: isZh ? '🛡️ 100% 正品手作' : '🛡️ 100% Authentic',
+        authenticBadge: isZh ? '🛡️ 100% 正品手作' : '🛡️ 100% Authentic Handcrafted',
         status: getCurrentTimeStr() + ' ✓'
       });
       saveMessages();
