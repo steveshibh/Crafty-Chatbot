@@ -787,10 +787,20 @@
               ${m.status ? `<span class="crafty-receipt">${m.status}</span>` : ''}
             </div>
           `;
-        } else {
+        } else if (m.isAutoReply) {
+          // Explicitly designated as Automatic System-Generated Reply
           metaHtml = `
             <div class="crafty-msg-meta">
-              <span class="crafty-maker-badge">🏪 ${isZh ? '卖家 (林师傅旗舰店)' : 'Seller (Lin Studio)'}</span>
+              <span class="crafty-auto-badge">⚡ ${isZh ? '系统自动回复 · 非人工卖家' : 'Auto Reply · Not Seller'}</span>
+              <span>•</span>
+              <span>${m.time}</span>
+            </div>
+          `;
+        } else {
+          // Direct Seller message
+          metaHtml = `
+            <div class="crafty-msg-meta">
+              <span class="crafty-maker-badge">🏪 ${isZh ? '卖家客服 (人工)' : 'Seller Support (Human)'}</span>
               <span>•</span>
               <span>${m.time}</span>
             </div>
@@ -833,12 +843,23 @@
           `;
         }
 
+        let autoFootHtml = '';
+        if (m.isAutoReply) {
+          autoFootHtml = `
+            <div class="crafty-auto-disclaimer">
+              <span>🤖</span>
+              <span>${isZh ? '此条消息由系统自动生成触发，卖家人工在线中' : 'This message is automatically generated; seller is on standby.'}</span>
+            </div>
+          `;
+        }
+
         msgEl.innerHTML = `
           ${metaHtml}
           <div class="crafty-bubble">
             <p style="white-space:pre-line; margin:0;">${escapeHtml(m.text)}</p>
             ${extraCardHtml}
             ${chipsHtml}
+            ${autoFootHtml}
           </div>
         `;
 
@@ -892,6 +913,7 @@
         messages.push({
           id: 'bot-faq-reply-' + Date.now(),
           sender: 'assistant',
+          isAutoReply: true,
           time: getCurrentTimeStr(),
           text: replyText
         });
@@ -919,6 +941,7 @@
         messages.push({
           id: 'conn-reply-' + Date.now(),
           sender: 'seller',
+          isAutoReply: false, // Real seller responding
           time: getCurrentTimeStr(),
           text: isZh
             ? "您好！我是林师傅木作旗舰店的卖家客服 🌿 看到您关于这款黑胡桃首饰盒的咨询，请问需要定制刻字、了解具体木纹还是核对发货工期呢？随时为您服务！"
@@ -971,7 +994,7 @@
       saveMessages();
       renderMessages();
 
-      // Seller replies to Buyer after 1.2s
+      // Seller or Auto-attendant replies to Buyer after 1.2s
       setTimeout(() => {
         simulateSellerReply(val);
       }, 1200);
@@ -982,8 +1005,9 @@
       const textLower = userText.trim().toLowerCase();
       let replyText = '';
       let replyChips = null;
+      let isAutomatic = false;
 
-      // 1. Keyword checks: Custom Engraving
+      // 1. Keyword checks: Custom Engraving (Personalized Seller response)
       if (textLower.includes('刻字') || textLower.includes('engrav') || textLower.includes('brass') || textLower.includes('定制')) {
         replyText = isZh 
           ? "收到您的刻字定制需求！我们选用 1.2mm 加厚实心黄铜拉丝片，内嵌在盒盖内侧并激光微雕纪念誓言与姓名首字母（定制周期 +1 工作日）。字样已为您记录至工作台排单。"
@@ -991,8 +1015,9 @@
         replyChips = isZh 
           ? ["查看黄铜刻字样照", "刻字内容格式", "确认加入定制"]
           : ["View Plaque Sample", "Engraving Format", "Confirm Bespoke"];
+        isAutomatic = false;
       }
-      // 2. Keyword checks: Dispatch / ETA / Lead Time
+      // 2. Keyword checks: Dispatch / ETA / Lead Time (Seller check)
       else if (textLower.includes('工期') || textLower.includes('发货') || textLower.includes('几天') || textLower.includes('lead time') || textLower.includes('eta') || textLower.includes('ship') || textLower.includes('deliver')) {
         replyText = isZh
           ? "卖家为您核对了工坊排期：北美黑胡桃现料充足！手工开榫至两道天然木蜡油阴干渗透固化约需 3-5 个工作日，出厂前拍摄实物照片供您确认，顺丰包邮直发！"
@@ -1000,6 +1025,7 @@
         replyChips = isZh 
           ? ["加急制作", "顺丰时效", "现货立即发货"]
           : ["Rush Production", "Courier ETA", "In-Stock Ready"];
+        isAutomatic = false;
       }
       // 3. Keyword checks: Authenticity / Wood Material
       else if (textLower.includes('材质') || textLower.includes('真木') || textLower.includes('胡桃') || textLower.includes('木头') || textLower.includes('walnut') || textLower.includes('material') || textLower.includes('wood') || textLower.includes('authentic')) {
@@ -1009,8 +1035,9 @@
         replyChips = isZh 
           ? ["木蜡油保养方法", "木材纹理差异", "查看检测凭证"]
           : ["Hardwax Care", "Grain Variations", "Wood Origin"];
+        isAutomatic = false;
       }
-      // 4. Greetings
+      // 4. Direct Greetings (Live seller welcoming buyer)
       else if (/^(hi|hello|hey|hola|你好|您好|哈喽|在吗|有人在吗|早|早上好|晚上好)[\s!！?？.~]*$/i.test(textLower)) {
         replyText = isZh
           ? "您好！我是林师傅木作旗舰店的卖家在线客服 🌿 很高兴为您服务！看到您在浏览我们的黑胡桃燕尾榫手作首饰盒，请问需要了解哪方面信息呢？"
@@ -1018,24 +1045,26 @@
         replyChips = isZh
           ? ["现货排期", "黄铜片刻字", "退换质保政策", "直接下单"]
           : ["Lead Time & ETA", "Bespoke Engraving", "Warranty & Returns", "Order Now"];
+        isAutomatic = false;
       }
-      // 5. UNMATCHED / RANDOM MESSAGE: Combined 3 Strategies
-      //    Strategy 1: Warm Seller Greeting & Topic Guidance
-      //    Strategy 2: Polite Clarification (didn't catch the exact inquiry)
-      //    Strategy 3: Official Shopee Flagship Store Auto-Reply Notice & Assistant Card
+      // 5. UNMATCHED / RANDOM MESSAGE: Automatic System Generated Reply
       else {
         replyText = isZh
-          ? "【工坊服务通知】已收到您的消息！林师傅木作旗舰店人工客服在线为您服务 (9:00 - 22:00)。\n\n您刚才发送的内容我们未完全理解。请问您是想咨询以下哪项手作服务？点击下方快捷标签即可直接获取详细解答："
-          : "【Store Service Notice】We have received your message! Lin Woodcraft Flagship Store live support is on duty (9:00 - 22:00).\n\nWe didn't quite catch your inquiry. Are you looking for assistance with one of our handcrafted services below? Tap any quick option below:";
+          ? "【工坊自动应答】已接收到您的留言！我们未完全识别此条内容。请问您需要咨询以下哪项服务？点击下方标签即可直接获取详细解答："
+          : "【Store Auto-Reply】We received your message! We didn't quite catch that. Are you looking for assistance with one of our handcrafted services below? Tap any option below:";
         
         replyChips = isZh
           ? ["🪵 原木材质与现货", "✒️ 黄铜刻字定制", "⏳ 制作发货工期", "🛡️ 终身质保与退换", "🗣️ 转接人工掌柜"]
           : ["🪵 Timber & Availability", "✒️ Bespoke Engraving", "⏳ Lead Time & ETA", "🛡️ Warranty & Care", "🗣️ Live Master Craftsman"];
+        
+        // This is explicitly an automated system reply, NOT from the human seller
+        isAutomatic = true;
       }
 
       messages.push({
         id: 'reply-' + Date.now(),
-        sender: 'seller',
+        sender: isAutomatic ? 'system' : 'seller',
+        isAutoReply: isAutomatic,
         time: getCurrentTimeStr(),
         text: replyText,
         chips: replyChips
