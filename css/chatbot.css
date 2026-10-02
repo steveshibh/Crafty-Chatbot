@@ -1216,4 +1216,84 @@
   border-color: var(--crafty-clay);
 }
 
+/* Emoji Picker Popup */
+.shopee-emoji-picker {
+  position: absolute;
+  bottom: 54px;
+  right: 12px;
+  width: 290px;
+  background: #ffffff;
+  border: 1px solid var(--crafty-line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(46, 42, 36, 0.18), 0 2px 8px rgba(46, 42, 36, 0.06);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: craftyFadeUp 0.18s ease-out;
+}
+
+@keyframes craftyFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.shopee-emoji-tabs {
+  display: flex;
+  background: var(--crafty-sand);
+  border-bottom: 1px solid var(--crafty-line);
+  padding: 4px 6px;
+  gap: 2px;
+}
+
+.shopee-emoji-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 0.95rem;
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  color: var(--crafty-muted);
+}
+
+.shopee-emoji-tab.is-active, .shopee-emoji-tab:hover {
+  background: #ffffff;
+  color: var(--crafty-ink);
+  box-shadow: 0 1px 3px rgba(46, 42, 36, 0.08);
+}
+
+.shopee-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.shopee-emoji-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 5px 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+
+.shopee-emoji-btn:hover {
+  background: var(--crafty-sand);
+  transform: scale(1.2);
+}
+
 

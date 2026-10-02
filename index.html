@@ -409,8 +409,21 @@
         />
       </form>
 
+      <!-- Emoji Picker Popup Tray -->
+      <div class="shopee-emoji-picker" id="emojiPicker" style="display:none;">
+        <div class="shopee-emoji-tabs">
+          <button type="button" class="shopee-emoji-tab is-active" onclick="switchEmojiTab('faces')" title="Faces">😊</button>
+          <button type="button" class="shopee-emoji-tab" onclick="switchEmojiTab('gestures')" title="Gestures">👍</button>
+          <button type="button" class="shopee-emoji-tab" onclick="switchEmojiTab('craft')" title="Craft & Nature">🪵</button>
+          <button type="button" class="shopee-emoji-tab" onclick="switchEmojiTab('objects')" title="Objects & Hearts">🎁</button>
+        </div>
+        <div class="shopee-emoji-grid" id="emojiGrid">
+          <!-- Populated by renderEmojiGrid() -->
+        </div>
+      </div>
+
       <!-- Emoji icon -->
-      <button type="button" class="shopee-icon-btn" onclick="insertEmoji('🌿')" title="Emoji">
+      <button type="button" class="shopee-icon-btn" onclick="toggleEmojiPicker(event)" title="Emoji / 表情">
         😊
       </button>
 
@@ -989,11 +1002,86 @@
       tray.style.display = tray.style.display === 'none' ? 'grid' : 'none';
     }
 
+    // --- Comprehensive Emojis for Chat ---
+    const emojiCatalog = {
+      faces: [
+        '😊', '😄', '😃', '😁', '🥰', '😍', '🤩',
+        '😘', '😚', '😋', '😜', '🤗', '🤭', '😌',
+        '😎', '🥳', '🧐', '🤔', '😳', '🥺', '😭',
+        '😅', '😇', '😴', '🤤', '😷', '🤒', '🤕'
+      ],
+      gestures: [
+        '👍', '👌', '🤝', '🙌', '👏', '🙏', '✌️',
+        '👋', '🤙', '✊', '👊', '🤞', '🤟', '🤘',
+        '💪', '👈', '👉', '👆', '👇', '✋', '🖐️'
+      ],
+      craft: [
+        '🪵', '🌿', '🪵', '🍂', '🍁', '🌱', '🌾',
+        '🪴', '🌲', '🌳', '🌸', '💐', '🌷', '🌻',
+        '🎨', '📐', '📏', '🔨', '🪚', '🪓', '🖌️'
+      ],
+      objects: [
+        '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎',
+        '🎁', '📦', '🏷️', '🛍️', '💎', '💍', '✨',
+        '⭐', '🌟', '☕', '🍵', '🥂', '🎉', '🏮'
+      ]
+    };
+
+    let activeEmojiTab = 'faces';
+
+    function toggleEmojiPicker(e) {
+      if (e) e.stopPropagation();
+      const picker = document.getElementById('emojiPicker');
+      const isVisible = picker.style.display !== 'none';
+      if (isVisible) {
+        picker.style.display = 'none';
+      } else {
+        renderEmojiGrid(activeEmojiTab);
+        picker.style.display = 'flex';
+      }
+    }
+
+    function switchEmojiTab(tabKey) {
+      activeEmojiTab = tabKey;
+      document.querySelectorAll('.shopee-emoji-tab').forEach((btn, idx) => {
+        const keys = ['faces', 'gestures', 'craft', 'objects'];
+        btn.classList.toggle('is-active', keys[idx] === tabKey);
+      });
+      renderEmojiGrid(tabKey);
+    }
+
+    function renderEmojiGrid(tabKey) {
+      const grid = document.getElementById('emojiGrid');
+      grid.innerHTML = '';
+      const list = emojiCatalog[tabKey] || emojiCatalog.faces;
+      list.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'shopee-emoji-btn';
+        btn.textContent = emoji;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          insertEmoji(emoji);
+        };
+        grid.appendChild(btn);
+      });
+    }
+
     function insertEmoji(em) {
       const input = document.getElementById('widgetInput');
       input.value += em;
       input.focus();
     }
+
+    // Dismiss emoji picker when clicking anywhere else in the widget or window
+    document.addEventListener('click', (e) => {
+      const picker = document.getElementById('emojiPicker');
+      if (picker && picker.style.display !== 'none') {
+        if (!picker.contains(e.target) && !e.target.closest('.shopee-icon-btn')) {
+          picker.style.display = 'none';
+        }
+      }
+    });
 
     function triggerMockAttachment() {
       const isZh = currentLang === 'zh';
