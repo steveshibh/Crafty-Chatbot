@@ -820,11 +820,25 @@
           }
         }
 
+        let chipsHtml = '';
+        if (m.chips && m.chips.length > 0) {
+          chipsHtml = `
+            <div class="crafty-quick-chips">
+              ${m.chips.map(chip => `
+                <button type="button" class="crafty-quick-chip" onclick="handleQuickChipClick('${escapeHtml(chip)}')">
+                  ${escapeHtml(chip)}
+                </button>
+              `).join('')}
+            </div>
+          `;
+        }
+
         msgEl.innerHTML = `
           ${metaHtml}
           <div class="crafty-bubble">
-            <p>${escapeHtml(m.text)}</p>
+            <p style="white-space:pre-line; margin:0;">${escapeHtml(m.text)}</p>
             ${extraCardHtml}
+            ${chipsHtml}
           </div>
         `;
 
@@ -965,31 +979,77 @@
 
     function simulateSellerReply(userText) {
       const isZh = currentLang === 'zh';
+      const textLower = userText.trim().toLowerCase();
       let replyText = '';
+      let replyChips = null;
 
-      if (userText.includes('刻字') || userText.toLowerCase().includes('engrav')) {
+      // 1. Keyword checks: Custom Engraving
+      if (textLower.includes('刻字') || textLower.includes('engrav') || textLower.includes('brass') || textLower.includes('定制')) {
         replyText = isZh 
-          ? "收到您的刻字需求！我们选用纯黄铜拉丝厚片，为您激光蚀刻专属字体，字样已记录到工坊排单册。"
-          : "Noted your custom engraving request! Solid brushed brass plaque text is saved to our studio queue.";
-      } else if (userText.includes('工期') || userText.toLowerCase().includes('lead time') || userText.toLowerCase().includes('eta')) {
+          ? "收到您的刻字定制需求！我们选用 1.2mm 加厚实心黄铜拉丝片，内嵌在盒盖内侧并激光微雕纪念誓言与姓名首字母（定制周期 +1 工作日）。字样已为您记录至工作台排单。"
+          : "Noted your custom engraving request! We use 1.2mm brushed solid brass plaques inset into the inner lid, laser-engraved with your initials or date. Lead time is +1 business day.";
+        replyChips = isZh 
+          ? ["查看黄铜刻字样照", "刻字内容格式", "确认加入定制"]
+          : ["View Plaque Sample", "Engraving Format", "Confirm Bespoke"];
+      }
+      // 2. Keyword checks: Dispatch / ETA / Lead Time
+      else if (textLower.includes('工期') || textLower.includes('发货') || textLower.includes('几天') || textLower.includes('lead time') || textLower.includes('eta') || textLower.includes('ship') || textLower.includes('deliver')) {
         replyText = isZh
-          ? "卖家客服为您查询了现货排单：目前有开好榫卯的现料，约 3 个工作日完成木蜡油渗透阴干即可顺丰发出！"
-          : "Our seller workshop checked inventory: we have prepared timber, taking 3 business days for hardwax-oil curing before dispatch!";
-      } else {
+          ? "卖家为您核对了工坊排期：北美黑胡桃现料充足！手工开榫至两道天然木蜡油阴干渗透固化约需 3-5 个工作日，出厂前拍摄实物照片供您确认，顺丰包邮直发！"
+          : "Our workshop checked the schedule: FAS Black walnut timber is in stock! Hand-chiseled joinery and two-coat hardwax curing take 3-5 business days. Workbench photos are sent before dispatch!";
+        replyChips = isZh 
+          ? ["加急制作", "顺丰时效", "现货立即发货"]
+          : ["Rush Production", "Courier ETA", "In-Stock Ready"];
+      }
+      // 3. Keyword checks: Authenticity / Wood Material
+      else if (textLower.includes('材质') || textLower.includes('真木') || textLower.includes('胡桃') || textLower.includes('木头') || textLower.includes('walnut') || textLower.includes('material') || textLower.includes('wood') || textLower.includes('authentic')) {
         replyText = isZh
-          ? "卖家客服收到您的留言！马上为您在工作台准备样料与方案，请稍候。"
-          : "Seller representative received your inquiry from the studio and will follow up with details shortly!";
+          ? "本店首饰盒 100% 采用北美进口 FAS 特级单块黑胡桃原木，绝非贴皮或密度板。榫卯接缝处顺应天然木纹，触感如丝绸般温润。"
+          : "All keepsake boxes are 100% solid North American FAS black walnut (never veneer or composite). Continuous grain flows around the hand-planed through-dovetails.";
+        replyChips = isZh 
+          ? ["木蜡油保养方法", "木材纹理差异", "查看检测凭证"]
+          : ["Hardwax Care", "Grain Variations", "Wood Origin"];
+      }
+      // 4. Greetings
+      else if (/^(hi|hello|hey|hola|你好|您好|哈喽|在吗|有人在吗|早|早上好|晚上好)[\s!！?？.~]*$/i.test(textLower)) {
+        replyText = isZh
+          ? "您好！我是林师傅木作旗舰店的卖家在线客服 🌿 很高兴为您服务！看到您在浏览我们的黑胡桃燕尾榫手作首饰盒，请问需要了解哪方面信息呢？"
+          : "Hello there! This is Master Lin's Woodcraft Flagship Store representative 🌿 Great to connect with you! How can we assist you with our bespoke dovetail keepsake boxes today?";
+        replyChips = isZh
+          ? ["现货排期", "黄铜片刻字", "退换质保政策", "直接下单"]
+          : ["Lead Time & ETA", "Bespoke Engraving", "Warranty & Returns", "Order Now"];
+      }
+      // 5. UNMATCHED / RANDOM MESSAGE: Combined 3 Strategies
+      //    Strategy 1: Warm Seller Greeting & Topic Guidance
+      //    Strategy 2: Polite Clarification (didn't catch the exact inquiry)
+      //    Strategy 3: Official Shopee Flagship Store Auto-Reply Notice & Assistant Card
+      else {
+        replyText = isZh
+          ? "【工坊服务通知】已收到您的消息！林师傅木作旗舰店人工客服在线为您服务 (9:00 - 22:00)。\n\n您刚才发送的内容我们未完全理解。请问您是想咨询以下哪项手作服务？点击下方快捷标签即可直接获取详细解答："
+          : "【Store Service Notice】We have received your message! Lin Woodcraft Flagship Store live support is on duty (9:00 - 22:00).\n\nWe didn't quite catch your inquiry. Are you looking for assistance with one of our handcrafted services below? Tap any quick option below:";
+        
+        replyChips = isZh
+          ? ["🪵 原木材质与现货", "✒️ 黄铜刻字定制", "⏳ 制作发货工期", "🛡️ 终身质保与退换", "🗣️ 转接人工掌柜"]
+          : ["🪵 Timber & Availability", "✒️ Bespoke Engraving", "⏳ Lead Time & ETA", "🛡️ Warranty & Care", "🗣️ Live Master Craftsman"];
       }
 
       messages.push({
         id: 'reply-' + Date.now(),
         sender: 'seller',
         time: getCurrentTimeStr(),
-        text: replyText
+        text: replyText,
+        chips: replyChips
       });
 
       saveMessages();
       renderMessages();
+    }
+
+    // --- Interactive Quick Chips Click Handler ---
+    function handleQuickChipClick(chipText) {
+      const input = document.getElementById('widgetInput');
+      input.value = chipText;
+      document.getElementById('widgetChatForm').dispatchEvent(new Event('submit'));
     }
 
     function getCurrentTimeStr() {

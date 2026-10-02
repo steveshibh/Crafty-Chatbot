@@ -233,6 +233,35 @@
   transform: translateY(-1px);
 }
 
+/* Quick Suggestion Chips inside bubble */
+.crafty-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--crafty-line);
+}
+
+.crafty-quick-chip {
+  background: #ffffff;
+  border: 1px solid var(--crafty-clay);
+  color: var(--crafty-clay);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.crafty-quick-chip:hover {
+  background: var(--crafty-clay);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
 /* --- Messages Container --- */
 .crafty-messages {
   flex: 1;
